@@ -7,9 +7,9 @@
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-sans);
-  --font-mono: var(--font-geist-mono);
-  --font-heading: var(--font-sans);
+  --font-sans: "Satoshi", sans-serif;
+  --font-mono: "Satoshi", sans-serif;
+  --font-heading: "Satoshi", sans-serif;
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
@@ -49,6 +49,9 @@
 }
 
 :root {
+  --font-sans: "Satoshi", sans-serif;
+  --font-mono: "Satoshi", sans-serif;
+  --font-heading: "Satoshi", sans-serif;
   --card: oklch(1 0 0);
   --card-foreground: oklch(0.145 0 0);
   --popover: oklch(1 0 0);
@@ -120,11 +123,14 @@
 @layer base {
   * {
     @apply border-border outline-ring/50;
+    font-family: "Satoshi", sans-serif !important;
   }
   body {
     @apply bg-background text-foreground;
+    font-family: "Satoshi", sans-serif !important;
   }
   html {
     @apply font-sans;
+    font-family: "Satoshi", sans-serif !important;
   }
 }
