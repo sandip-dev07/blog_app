@@ -2,9 +2,11 @@
 
 import { ArrowUpRight } from "lucide-react";
 import Link from "next/link";
+import { useQueryState } from "nuqs";
 import useSWR from "swr";
 
 import { Skeleton } from "@/components/ui/skeleton";
+import { useDebounce } from "@/hooks/use-debounce";
 
 type BlogSummary = {
   id: string;
@@ -22,11 +24,11 @@ type BlogsResponse = {
 
 function BlogListSkeleton() {
   return (
-    <div id="posts" className="flex flex-col gap-1" aria-busy="true">
+    <div id="posts" className="divide-y divide-border" aria-busy="true">
       {Array.from({ length: 3 }).map((_, index) => (
         <div
           key={index}
-          className="-mx-3 rounded-md px-3 py-4"
+          className="py-5"
           aria-hidden="true"
         >
           <div className="mb-3 flex items-center gap-2">
@@ -34,7 +36,7 @@ function BlogListSkeleton() {
             <Skeleton className="h-3 w-20" />
             <Skeleton className="h-3 w-12" />
           </div>
-          <Skeleton className="h-5 w-3/4" />
+          <Skeleton className="h-5 w-4/5" />
           <Skeleton className="mt-2 h-4 w-full" />
         </div>
       ))}
@@ -43,7 +45,12 @@ function BlogListSkeleton() {
 }
 
 export default function BlogList() {
-  const { data, error, isLoading } = useSWR<BlogsResponse>("/api/blogs");
+  const [search] = useQueryState("q");
+  const debouncedSearch = useDebounce((search ?? "").trim(), 300);
+  const blogsUrl = debouncedSearch
+    ? `/api/blogs?q=${encodeURIComponent(debouncedSearch)}`
+    : "/api/blogs";
+  const { data, error, isLoading } = useSWR<BlogsResponse>(blogsUrl);
   const posts = data?.blogs ?? [];
 
   if (isLoading) {
@@ -53,7 +60,9 @@ export default function BlogList() {
   if (error) {
     return (
       <div id="posts" className="rounded-md border border-border px-5 py-8">
-        <p className="text-sm text-muted-foreground">{error}</p>
+        <p className="text-center text-sm text-muted-foreground">
+          Unable to load posts right now.
+        </p>
       </div>
     );
   }
@@ -62,23 +71,25 @@ export default function BlogList() {
     return (
       <div id="posts" className="rounded-md border border-border px-5 py-8">
         <p className="text-sm text-muted-foreground text-center">
-          No published posts yet.
+          {debouncedSearch
+            ? `No posts found for "${debouncedSearch}".`
+            : "No published posts yet."}
         </p>
       </div>
     );
   }
 
   return (
-    <div id="posts" className="flex flex-col gap-1">
+    <div id="posts" className="divide-y divide-border">
       {posts.map((post) => (
         <Link
           key={post.id}
           href={`/blogs/${post.slug}`}
-          className="group -mx-3 flex items-start justify-between gap-4 rounded-md px-3 py-4 transition-colors hover:bg-card"
+          className="group flex items-start justify-between gap-4 rounded-md py-5 transition-colors hover:bg-card/60 sm:-mx-3 sm:px-3"
         >
           <div className="min-w-0 flex-1">
-            <div className="mb-1 flex items-center gap-2">
-              <span className="rounded-full bg-secondary px-2 py-0.5 font-mono text-[11px] leading-4 text-secondary-foreground">
+            <div className="mb-2 flex flex-wrap items-center gap-2">
+              <span className="rounded-md bg-secondary px-2 py-0.5 font-mono text-[11px] leading-4 text-secondary-foreground">
                 {post.tag}
               </span>
               <span className="text-xs text-muted-foreground">
@@ -90,18 +101,18 @@ export default function BlogList() {
               </span>
             </div>
 
-            <h3 className="text-base mt-2 font-medium tracking-normal text-foreground transition-colors group-hover:text-green-300">
+            <h3 className="text-base font-medium tracking-normal text-foreground transition-colors group-hover:text-primary">
               {post.title}
             </h3>
 
-            <p className="mt-0.5 overflow-hidden text-ellipsis whitespace-nowrap text-sm leading-relaxed text-muted-foreground line-clamp-1">
+            <p className="mt-1 line-clamp-2 text-sm leading-6 text-muted-foreground">
               {post.excerpt}
             </p>
           </div>
 
           <ArrowUpRight
             size={14}
-            className="mt-6 shrink-0 text-muted-foreground opacity-0 transition-all group-hover:-translate-y-0.5 group-hover:translate-x-0.5 group-hover:text-green-500 group-hover:opacity-100"
+            className="mt-8 shrink-0 text-muted-foreground opacity-0 transition-all group-hover:-translate-y-0.5 group-hover:translate-x-0.5 group-hover:text-primary group-hover:opacity-100"
           />
         </Link>
       ))}

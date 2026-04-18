@@ -30,13 +30,30 @@ export function estimateReadTime(html: string) {
   return `${minutes} min read`;
 }
 
-export async function getPublishedBlogs() {
+export async function getPublishedBlogs(search = "") {
+  const query = search.trim();
+
   return db.blog.findMany({
     where: {
       status: BlogStatus.PUBLISHED,
       publishedAt: {
         not: null,
       },
+      ...(query
+        ? {
+            OR: [
+              { title: { contains: query, mode: "insensitive" as const } },
+              { slug: { contains: query, mode: "insensitive" as const } },
+              { tag: { contains: query, mode: "insensitive" as const } },
+              {
+                contentHtml: {
+                  contains: query,
+                  mode: "insensitive" as const,
+                },
+              },
+            ],
+          }
+        : {}),
     },
     orderBy: [{ publishedAt: "desc" }, { updatedAt: "desc" }],
     select: {

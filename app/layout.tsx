@@ -5,7 +5,8 @@ import Navbar from "./navbar";
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
 const siteName = "~/sandip";
-const siteDescription = "Thoughts on code, design, and building for the web.";
+const siteDescription =
+  "Practical notes on backend design, system architecture, frontend engineering, AI, and building reliable software.";
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
@@ -18,7 +19,14 @@ export const metadata: Metadata = {
   authors: [{ name: "Sandip Sarkar" }],
   creator: "Sandip Sarkar",
   publisher: "Sandip Sarkar",
-  keywords: ["blog", "code", "design", "web development"],
+  keywords: [
+    "software engineering",
+    "backend design",
+    "system design",
+    "frontend engineering",
+    "AI engineering",
+    "web development",
+  ],
   alternates: {
     canonical: "/",
   },

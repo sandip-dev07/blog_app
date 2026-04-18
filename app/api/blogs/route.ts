@@ -9,7 +9,8 @@ import {
 } from "@/lib/public-blogs";
 
 export async function GET(request: NextRequest) {
-  const blogs = await getPublishedBlogs();
+  const search = request.nextUrl.searchParams.get("q") ?? "";
+  const blogs = await getPublishedBlogs(search);
   const payload = {
     blogs: blogs.map((blog) => ({
       id: blog.id,
