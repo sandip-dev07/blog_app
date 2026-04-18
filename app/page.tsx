@@ -12,7 +12,7 @@ export default function Home() {
           <div className="flex items-start justify-between gap-6">
             <div className="min-w-0">
               <p className="mb-4 text-xs font-medium uppercase tracking-[0.18em] text-muted-foreground">
-                Engineering Notes
+                Engineering
               </p>
               <h1 className="max-w-xl text-4xl font-medium leading-tight tracking-normal text-foreground sm:text-5xl">
                 Useful ideas for building better software.
