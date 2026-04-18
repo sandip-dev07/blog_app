@@ -1,18 +1,20 @@
 import { NextRequest, NextResponse } from "next/server";
 
-import { auth } from "@/lib/auth";
+import { getXmdxAdminUser } from "@/lib/xmdx-admin";
 
 export async function proxy(request: NextRequest) {
   const pathname = request.nextUrl.pathname;
-  const session = await auth.api.getSession({
-    headers: request.headers,
-  });
+  const adminUser = await getXmdxAdminUser(request.headers);
 
-  if (pathname === "/xmdx/login" && session) {
+  if (pathname === "/xmdx/login") {
+    if (!adminUser) {
+      return NextResponse.next();
+    }
+
     return NextResponse.redirect(new URL("/xmdx/blogs", request.url));
   }
 
-  if (!session) {
+  if (!adminUser) {
     return NextResponse.redirect(new URL("/xmdx/login", request.url));
   }
 
