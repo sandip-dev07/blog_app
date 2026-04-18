@@ -134,3 +134,99 @@
     font-family: "Satoshi", sans-serif !important;
   }
 }
+
+@layer components {
+  .blog-editor-content {
+    @apply min-h-[460px] text-lg leading-8 text-foreground outline-none;
+  }
+
+  .blog-editor-content > * + * {
+    @apply mt-5;
+  }
+
+  .blog-editor-content h1 {
+    @apply text-4xl font-bold leading-tight tracking-normal md:text-5xl;
+  }
+
+  .blog-editor-content h2 {
+    @apply text-3xl font-semibold leading-tight tracking-normal md:text-4xl;
+  }
+
+  .blog-editor-content h3 {
+    @apply text-2xl font-semibold leading-tight tracking-normal;
+  }
+
+  .blog-editor-content h4 {
+    @apply text-xl font-semibold leading-tight tracking-normal;
+  }
+
+  .blog-editor-content p {
+    @apply text-foreground/90;
+  }
+
+  .blog-editor-content a {
+    @apply text-foreground underline decoration-foreground/30 underline-offset-4 transition hover:decoration-foreground;
+  }
+
+  .blog-editor-content blockquote {
+    @apply border-l-4 border-border pl-5 text-foreground/80;
+  }
+
+  .blog-editor-content ul {
+    @apply list-disc pl-6;
+  }
+
+  .blog-editor-content ol {
+    @apply list-decimal pl-6;
+  }
+
+  .blog-editor-content li + li {
+    @apply mt-2;
+  }
+
+  .blog-editor-content ul[data-type="taskList"] {
+    @apply list-none pl-0;
+  }
+
+  .blog-editor-content ul[data-type="taskList"] li {
+    @apply flex items-start gap-3;
+  }
+
+  .blog-editor-content ul[data-type="taskList"] li > label {
+    @apply mt-1.5;
+  }
+
+  .blog-editor-content ul[data-type="taskList"] li > div {
+    @apply flex-1;
+  }
+
+  .blog-editor-content code {
+    @apply rounded-md bg-muted px-1.5 py-0.5 text-[0.9em] text-foreground;
+  }
+
+  .blog-editor-content pre {
+    @apply overflow-x-auto rounded-lg bg-muted p-4 text-sm leading-6;
+  }
+
+  .blog-editor-content pre code {
+    @apply bg-transparent p-0;
+  }
+
+  .blog-editor-content mark {
+    @apply rounded-md bg-primary/15 px-1 py-0.5 text-foreground;
+  }
+
+  .blog-editor-content img {
+    @apply max-h-[680px] w-full rounded-lg object-cover;
+  }
+
+  .blog-editor-content hr {
+    @apply my-8 border-border;
+  }
+
+  .blog-editor-content p.is-empty::before,
+  .blog-editor-content p.is-editor-empty::before {
+    @apply pointer-events-none float-left h-0 text-lg font-normal leading-8 text-muted-foreground/60;
+    content: attr(data-placeholder);
+  }
+}
