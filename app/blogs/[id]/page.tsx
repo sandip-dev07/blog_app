@@ -1,16 +1,13 @@
 import type { Metadata } from "next";
 
-import {
-  getExcerpt,
-  getPublishedBlogBySlug,
-  getPublishedBlogs,
-} from "@/lib/public-blogs";
 import { BlogDetailsClient } from "./blog-details-client";
 
-export async function generateStaticParams() {
-  const posts = await getPublishedBlogs();
-
-  return posts.map((post) => ({ id: post.slug }));
+function titleFromSlug(slug: string) {
+  return slug
+    .split("-")
+    .filter(Boolean)
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(" ");
 }
 
 export async function generateMetadata({
@@ -19,21 +16,14 @@ export async function generateMetadata({
   params: Promise<{ id: string }>;
 }): Promise<Metadata> {
   const { id } = await params;
-  const post = await getPublishedBlogBySlug(id);
-
-  if (!post) {
-    return {
-      title: "Post not found",
-    };
-  }
+  const title = titleFromSlug(id) || "Blog";
 
   return {
-    title: post.title,
-    description: getExcerpt(post.contentHtml, 160),
+    title,
+    description: "Thoughts on code, design, and building for the web.",
     openGraph: {
-      title: post.title,
-      description: getExcerpt(post.contentHtml, 160),
-      images: post.coverImage ? [post.coverImage] : undefined,
+      title,
+      description: "Thoughts on code, design, and building for the web.",
     },
   };
 }
