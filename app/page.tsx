@@ -1,4 +1,5 @@
 import Image from "next/image";
+import { Suspense } from "react";
 
 import BlogList from "@/components/blog-list";
 import Reveal from "@/components/reveal";
@@ -37,7 +38,9 @@ export default function Home() {
         </Reveal>
 
         <div className="border-t border-border pt-6">
-          <BlogList />
+          <Suspense fallback={null}>
+            <BlogList />
+          </Suspense>
         </div>
       </section>
     </main>
