@@ -1,4 +1,4 @@
-import { BlogStatus } from "@/lib/generated/prisma/enums";
+import { BlogStatus } from "@/lib/prisma";
 import { db } from "@/server/db";
 
 export function stripHtml(html: string) {

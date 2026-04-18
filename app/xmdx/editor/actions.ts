@@ -3,8 +3,7 @@
 import { revalidatePath } from "next/cache";
 
 import { uploadDataUriImage } from "@/lib/cloudinary";
-import type { Prisma } from "@/lib/generated/prisma/client";
-import { BlogStatus } from "@/lib/generated/prisma/enums";
+import { BlogStatus, type Prisma } from "@/lib/prisma";
 import { requireXmdxAdminUser } from "@/lib/xmdx-admin";
 import { db } from "@/server/db";
 

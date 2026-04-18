@@ -2,7 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 
 import { Button } from "@/components/ui/button";
-import { BlogStatus } from "@/lib/generated/prisma/enums";
+import { BlogStatus } from "@/lib/prisma";
 import { getXmdxAdminUser } from "@/lib/xmdx-admin";
 import { db } from "@/server/db";
 import { DeleteBlogButton } from "./delete-blog-button";

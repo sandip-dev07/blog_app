@@ -1,7 +1,7 @@
 import { headers as nextHeaders } from "next/headers";
 
 import { auth } from "@/lib/auth";
-import { UserRole } from "@/lib/generated/prisma/enums";
+import { UserRole } from "@/lib/prisma";
 import { db } from "@/server/db";
 
 export function normalizeEmail(email: string) {

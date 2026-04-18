@@ -2,14 +2,14 @@ import { PrismaNeon } from "@prisma/adapter-neon";
 import { neonConfig } from "@neondatabase/serverless";
 import ws from "ws";
 import { readReplicas } from "@prisma/extension-read-replicas";
-import { PrismaClient } from "@/lib/generated/prisma/client";
+import { PrismaClient, type PrismaClientType } from "@/lib/prisma";
 
 // Neon WebSocket config for Node.js (once)
 neonConfig.webSocketConstructor = ws;
 neonConfig.poolQueryViaFetch = true;
 
 declare global {
-  var prisma: PrismaClient | undefined;
+  var prisma: PrismaClientType | undefined;
 }
 
 function createPrismaClient() {
@@ -36,7 +36,7 @@ function createPrismaClient() {
 
     return primaryClient.$extends(
       readReplicas({ replicas: [replicaClient] })
-    ) as unknown as PrismaClient;
+    ) as unknown as PrismaClientType;
   }
 
   return primaryClient;
