@@ -283,18 +283,44 @@ export function BlogEditor({ initialBlog = null }: BlogEditorProps) {
   const html = editor?.getHTML() ?? "";
   const publishLabel = blogId ? "Update" : "Publish";
   const publishingLabel = blogId ? "Updating..." : "Publishing...";
+  const statusLabel =
+    status === "saving"
+      ? "Saving"
+      : status === "saved"
+        ? "Saved"
+        : status === "error"
+          ? "Save failed"
+          : "Ready";
 
   return (
-    <main className="min-h-screen bg-background text-foreground max-w-3xl mx-auto">
+    <main className="min-h-screen bg-background text-foreground">
       <header className="sticky top-0 z-40 border-b border-border/60 bg-background/95 backdrop-blur">
-        <div className="mx-auto flex min-h-14 w-full max-w-4xl flex-wrap items-center justify-between gap-3 px-5 py-2 sm:px-6">
+        <div className="mx-auto flex min-h-14 w-full max-w-3xl flex-wrap items-center justify-between gap-3 px-5 py-2 sm:px-6">
           <NextLink
             href="/xmdx/blogs"
-            className="text-sm font-medium text-muted-foreground transition hover:text-foreground"
+            className="inline-flex items-center gap-2 text-sm font-medium text-muted-foreground transition hover:text-foreground"
           >
-            <MoveLeft className="mr-2 h-4 w-4" />
+            <MoveLeft className="h-4 w-4" />
+            Back
           </NextLink>
+
           <div className="flex flex-wrap items-center justify-end gap-2">
+            <div
+              className={
+                status === "error"
+                  ? "mr-1 flex min-w-20 items-center justify-end gap-2 text-xs text-destructive"
+                  : "mr-1 flex min-w-20 items-center justify-end gap-2 text-xs text-muted-foreground"
+              }
+            >
+              {status === "saving" ? (
+                <Loader2 className="h-3.5 w-3.5 animate-spin" />
+              ) : null}
+              {status === "saved" ? (
+                <CheckCircle2 className="h-3.5 w-3.5" />
+              ) : null}
+              <span>{statusLabel}</span>
+            </div>
+
             <Button
               type="button"
               variant="outline"
@@ -312,6 +338,7 @@ export function BlogEditor({ initialBlog = null }: BlogEditorProps) {
             >
               {savingBlogStatus === "PUBLISHED" ? publishingLabel : publishLabel}
             </Button>
+
             <div className="flex items-center rounded-md border border-border bg-muted/35 p-0.5 text-xs font-medium">
               <button
                 type="button"
@@ -340,56 +367,47 @@ export function BlogEditor({ initialBlog = null }: BlogEditorProps) {
                 Preview
               </button>
             </div>
-            {/* <div className="flex min-w-20 items-center justify-end gap-2 text-xs text-muted-foreground">
-              {status === "saving" ? (
-                <>
-                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                  <span>Saving</span>
-                </>
-              ) : null}
-              {status === "saved" ? (
-                <>
-                  <CheckCircle2 className="h-3.5 w-3.5" />
-                  <span>Saved</span>
-                </>
-              ) : null}
-              {status === "idle" ? <span>Ready</span> : null}
-              {status === "error" ? (
-                <span className="text-destructive">Save failed</span>
-              ) : null}
-            </div> */}
           </div>
         </div>
       </header>
 
-      <section className="mx-auto max-w-4xl px-5 pb-44 pt-4">
-        <div className="mb-10">
+      <section className="mx-auto max-w-3xl px-5 pb-44 pt-6 sm:px-6">
+        <div className="mb-5 border-b border-border/60 pb-5">
           <p className="mb-3 text-xs font-medium uppercase tracking-normal text-muted-foreground">
             {blogId ? "Edit post" : "New post"}
           </p>
-          <input
-            value={title}
-            onChange={(event) => setTitle(event.target.value)}
-            placeholder="Untitled"
-            aria-label="Post title"
-            className="w-full border-0 mt-4 bg-transparent text-4xl font-bold tracking-normal text-foreground outline-none placeholder:text-muted-foreground/40 md:text-5xl"
-          />
-          {!preview ? (
-            <input
-              value={tag}
-              onChange={(event) => setTag(event.target.value)}
-              placeholder="Category"
-              aria-label="Blog category"
-              className="mt-6 h-9 w-full max-w-38 rounded-md border border-border bg-transparent px-3 text-sm font-medium text-foreground outline-none transition placeholder:text-muted-foreground/50 focus:border-ring focus:ring-3 focus:ring-ring/50"
-            />
-          ) : null}
+
+          {preview ? (
+            <>
+              <h1 className="text-4xl font-bold tracking-normal text-foreground md:text-5xl">
+                {title || "Untitled"}
+              </h1>
+              <p className="mt-6 w-fit rounded-md border border-border bg-muted px-2.5 py-1 text-xs font-medium text-muted-foreground">
+                {tag || DEFAULT_TAG}
+              </p>
+            </>
+          ) : (
+            <>
+              <input
+                value={title}
+                onChange={(event) => setTitle(event.target.value)}
+                placeholder="Untitled"
+                aria-label="Post title"
+                className="w-full border-0 bg-transparent text-4xl font-bold tracking-normal text-foreground outline-none placeholder:text-muted-foreground/40 md:text-5xl"
+              />
+              <input
+                value={tag}
+                onChange={(event) => setTag(event.target.value)}
+                placeholder="Category"
+                aria-label="Blog category"
+                className="mt-6 h-9 w-full max-w-44 rounded-md border border-border bg-transparent px-3 text-sm font-medium text-foreground outline-none transition placeholder:text-muted-foreground/50 focus:border-ring focus:ring-3 focus:ring-ring/50"
+              />
+            </>
+          )}
         </div>
 
         {preview ? (
-          <article>
-            <p className="mb-8 w-fit rounded-full bg-secondary px-2 py-0.5 text-xs font-medium text-secondary-foreground">
-              {tag || DEFAULT_TAG}
-            </p>
+          <article className="pt-2">
             <div
               className="blog-editor-content ProseMirror"
               dangerouslySetInnerHTML={{ __html: html }}

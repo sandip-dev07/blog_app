@@ -137,11 +137,15 @@
 
 @layer components {
   .blog-editor-content {
-    @apply min-h-[460px] text-lg leading-8 text-foreground outline-none;
+    @apply min-h-[460px] text-lg leading-7 text-foreground outline-none;
+  }
+
+  .blog-editor-content > * {
+    @apply my-0;
   }
 
   .blog-editor-content > * + * {
-    @apply mt-5;
+    @apply mt-3;
   }
 
   .blog-editor-content h1 {
@@ -226,7 +230,7 @@
 
   .blog-editor-content p.is-empty::before,
   .blog-editor-content p.is-editor-empty::before {
-    @apply pointer-events-none float-left h-0 text-lg font-normal leading-8 text-muted-foreground/60;
+    @apply pointer-events-none float-left h-0 text-lg font-normal leading-7 text-muted-foreground/60;
     content: attr(data-placeholder);
   }
 }

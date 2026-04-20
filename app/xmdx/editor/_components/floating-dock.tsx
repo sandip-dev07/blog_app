@@ -116,6 +116,10 @@ export function FloatingDock({
   const [imageOpen, setImageOpen] = useState(false);
   const disabled = !editor || preview;
 
+  if (preview) {
+    return null;
+  }
+
   return (
     <>
       <div className="pointer-events-none max-w-3xl mx-auto fixed inset-x-0 bottom-4 z-50 flex justify-center px-4">
