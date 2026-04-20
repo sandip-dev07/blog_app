@@ -137,7 +137,7 @@
 
 @layer components {
   .blog-editor-content {
-    @apply min-h-[460px] text-lg leading-7 text-foreground outline-none;
+    @apply min-h-[460px] text-base leading-7 text-foreground outline-none;
   }
 
   .blog-editor-content > * {
@@ -230,7 +230,7 @@
 
   .blog-editor-content p.is-empty::before,
   .blog-editor-content p.is-editor-empty::before {
-    @apply pointer-events-none float-left h-0 text-lg font-normal leading-7 text-muted-foreground/60;
+    @apply pointer-events-none float-left h-0 text-base font-normal leading-7 text-muted-foreground/60;
     content: attr(data-placeholder);
   }
 }
