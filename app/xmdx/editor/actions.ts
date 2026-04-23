@@ -1,9 +1,10 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
+import { revalidatePath, revalidateTag } from "next/cache";
 
 import { uploadDataUriImage } from "@/lib/cloudinary";
 import { BlogStatus, type Prisma } from "@/lib/prisma";
+import { getPublishedBlogTag } from "@/lib/public-blogs";
 import { requireXmdxAdminUser } from "@/lib/xmdx-admin";
 import { db } from "@/server/db";
 
@@ -172,9 +173,12 @@ export async function saveBlog(input: SaveBlogInput) {
 
   revalidatePath("/xmdx/blogs");
   revalidatePath(`/blogs/${blog.slug}`);
+  revalidateTag("published-blogs", "max");
+  revalidateTag(getPublishedBlogTag(blog.slug), "max");
 
   if (existingBlog?.slug && existingBlog.slug !== blog.slug) {
     revalidatePath(`/blogs/${existingBlog.slug}`);
+    revalidateTag(getPublishedBlogTag(existingBlog.slug), "max");
   }
 
   return {

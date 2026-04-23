@@ -1,7 +1,8 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
+import { revalidatePath, revalidateTag } from "next/cache";
 
+import { getPublishedBlogTag } from "@/lib/public-blogs";
 import { requireXmdxAdminUser } from "@/lib/xmdx-admin";
 import { db } from "@/server/db";
 
@@ -27,4 +28,6 @@ export async function deleteBlog(blogId: string) {
   revalidatePath("/");
   revalidatePath("/xmdx/blogs");
   revalidatePath(`/blogs/${blog.slug}`);
+  revalidateTag("published-blogs", "max");
+  revalidateTag(getPublishedBlogTag(blog.slug), "max");
 }

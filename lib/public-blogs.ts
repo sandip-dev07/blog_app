@@ -1,5 +1,13 @@
+import { unstable_cache } from "next/cache";
+
 import { BlogStatus } from "@/lib/prisma";
 import { db } from "@/server/db";
+
+const PUBLISHED_BLOGS_TAG = "published-blogs";
+
+export function getPublishedBlogTag(slug: string) {
+  return `published-blog:${slug}`;
+}
 
 export function stripHtml(html: string) {
   return html.replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim();
@@ -30,7 +38,7 @@ export function estimateReadTime(html: string) {
   return `${minutes} min read`;
 }
 
-export async function getPublishedBlogs(search = "") {
+async function getPublishedBlogsUncached(search = "") {
   const query = search.trim();
 
   return db.blog.findMany({
@@ -75,7 +83,7 @@ export async function getPublishedBlogs(search = "") {
   });
 }
 
-export async function getPublishedBlogBySlug(slug: string) {
+async function getPublishedBlogBySlugUncached(slug: string) {
   return db.blog.findFirst({
     where: {
       slug,
@@ -101,4 +109,28 @@ export async function getPublishedBlogBySlug(slug: string) {
       },
     },
   });
+}
+
+export async function getPublishedBlogs(search = "") {
+  const query = search.trim();
+
+  return unstable_cache(
+    async () => getPublishedBlogsUncached(query),
+    ["published-blogs", query],
+    {
+      tags: [PUBLISHED_BLOGS_TAG],
+      revalidate: 300,
+    },
+  )();
+}
+
+export async function getPublishedBlogBySlug(slug: string) {
+  return unstable_cache(
+    async () => getPublishedBlogBySlugUncached(slug),
+    ["published-blog-by-slug", slug],
+    {
+      tags: [PUBLISHED_BLOGS_TAG, getPublishedBlogTag(slug)],
+      revalidate: 300,
+    },
+  )();
 }
