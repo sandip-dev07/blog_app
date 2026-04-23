@@ -23,12 +23,18 @@ export function getExcerpt(html: string, maxLength = 150) {
   return `${text.slice(0, maxLength).trim()}...`;
 }
 
-export function formatBlogDate(date: Date) {
+export function formatBlogDate(date: Date | string | number | null | undefined) {
+  const value = date instanceof Date ? date : new Date(date ?? "");
+
+  if (Number.isNaN(value.getTime())) {
+    return "";
+  }
+
   return new Intl.DateTimeFormat("en", {
     day: "2-digit",
     month: "short",
     year: "numeric",
-  }).format(date);
+  }).format(value);
 }
 
 export function estimateReadTime(html: string) {
