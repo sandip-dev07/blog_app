@@ -31,13 +31,13 @@ function BlogListSkeleton() {
           className="py-5"
           aria-hidden="true"
         >
-          <div className="mb-3 flex items-center gap-2">
+          <Skeleton className="h-5 w-4/5" />
+          <Skeleton className="mt-2 h-4 w-full" />
+          <div className="mt-3 flex items-center gap-2">
             <Skeleton className="h-5 w-14 rounded-full" />
             <Skeleton className="h-3 w-20" />
             <Skeleton className="h-3 w-12" />
           </div>
-          <Skeleton className="h-5 w-4/5" />
-          <Skeleton className="mt-2 h-4 w-full" />
         </div>
       ))}
     </div>
@@ -88,7 +88,15 @@ export default function BlogList() {
           className="group flex items-start justify-between gap-4 rounded-md py-5 transition-colors hover:bg-card/60 sm:-mx-3 sm:px-3"
         >
           <div className="min-w-0 flex-1">
-            <div className="mb-2 flex flex-wrap items-center gap-2">
+            <h3 className="text-base font-medium tracking-normal text-foreground transition-colors group-hover:text-primary">
+              {post.title}
+            </h3>
+
+            <p className="mt-1 line-clamp-2 text-sm leading-6 text-muted-foreground">
+              {post.excerpt}
+            </p>
+
+            <div className="mt-3 flex flex-wrap items-center gap-2">
               <span className="rounded-md bg-secondary px-2 py-0.5 font-mono text-[11px] leading-4 text-secondary-foreground">
                 {post.tag}
               </span>
@@ -100,14 +108,6 @@ export default function BlogList() {
                 {post.readTime}
               </span>
             </div>
-
-            <h3 className="text-base font-medium tracking-normal text-foreground transition-colors group-hover:text-primary">
-              {post.title}
-            </h3>
-
-            <p className="mt-1 line-clamp-2 text-sm leading-6 text-muted-foreground">
-              {post.excerpt}
-            </p>
           </div>
 
           <ArrowUpRight

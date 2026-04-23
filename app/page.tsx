@@ -15,12 +15,11 @@ export default function Home() {
                 Engineering
               </p>
               <h1 className="max-w-xl text-4xl font-medium leading-tight tracking-normal text-foreground sm:text-5xl">
-                Useful ideas for building better software.
+                Ideas and insights for building better software.{" "}
               </h1>
               <p className="mt-5 max-w-lg text-sm leading-7 text-muted-foreground sm:text-base">
-                Practical notes on backend design, system architecture,
-                frontend engineering, AI, and the perspective behind reliable
-                software decisions.
+                Practical insights on backend, system design, frontend, and AI
+                for building reliable software.
               </p>
             </div>
 

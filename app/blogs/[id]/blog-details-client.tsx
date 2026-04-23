@@ -1,8 +1,10 @@
 "use client";
 
-import { BriefcaseBusiness, X } from "lucide-react";
 import Link from "next/link";
+import { FaLinkedinIn, FaXTwitter } from "react-icons/fa6";
 import useSWR from "swr";
+
+import { Skeleton } from "@/components/ui/skeleton";
 
 type BlogDetail = {
   id: string;
@@ -22,16 +24,16 @@ type BlogDetailResponse = {
 
 const socialLinks = [
   {
-    href: process.env.NEXT_PUBLIC_X_URL ?? "https://x.com/sandip",
+    href: process.env.NEXT_PUBLIC_X_URL ?? "https://x.com/sandip_dev_07",
     label: "X",
-    icon: X,
+    icon: FaXTwitter,
   },
   {
     href:
       process.env.NEXT_PUBLIC_LINKEDIN_URL ??
       "https://www.linkedin.com/in/sandip-sarkar",
     label: "LinkedIn",
-    icon: BriefcaseBusiness,
+    icon: FaLinkedinIn,
   },
 ];
 
@@ -51,6 +53,46 @@ function BlogDetailsShell({ children }: { children: React.ReactNode }) {
   );
 }
 
+function BlogDetailsSkeleton() {
+  return (
+    <BlogDetailsShell>
+      <div aria-busy="true">
+        <header className="border-b border-border pb-7" aria-hidden="true">
+          <div className="mb-3 flex flex-wrap items-center gap-2">
+            <Skeleton className="h-5 w-16 rounded-full" />
+            <Skeleton className="h-3 w-24" />
+            <Skeleton className="h-3 w-3 rounded-full" />
+            <Skeleton className="h-3 w-16" />
+          </div>
+
+          <Skeleton className="h-8 w-4/5" />
+          <Skeleton className="mt-3 h-8 w-2/3" />
+        </header>
+
+        <div className="space-y-4 pt-7" aria-hidden="true">
+          <Skeleton className="h-4 w-full" />
+          <Skeleton className="h-4 w-[95%]" />
+          <Skeleton className="h-4 w-[88%]" />
+          <Skeleton className="h-4 w-full" />
+          <Skeleton className="h-4 w-[92%]" />
+          <Skeleton className="h-4 w-[84%]" />
+          <Skeleton className="mt-3 h-4 w-[90%]" />
+          <Skeleton className="h-4 w-full" />
+          <Skeleton className="h-4 w-[86%]" />
+        </div>
+
+        <footer className="mt-12 border-t border-border pt-6" aria-hidden="true">
+          <Skeleton className="mb-3 h-3 w-20" />
+          <div className="flex flex-wrap items-center gap-2">
+            <Skeleton className="h-9 w-20 rounded-md" />
+            <Skeleton className="h-9 w-28 rounded-md" />
+          </div>
+        </footer>
+      </div>
+    </BlogDetailsShell>
+  );
+}
+
 export function BlogDetailsClient({ slug }: { slug: string }) {
   const { data, error, isLoading } = useSWR<BlogDetailResponse>(
     `/api/blogs/${encodeURIComponent(slug)}`,
@@ -58,11 +100,7 @@ export function BlogDetailsClient({ slug }: { slug: string }) {
   const blog = data?.blog ?? null;
 
   if (isLoading) {
-    return (
-      <BlogDetailsShell>
-        <p className="text-sm text-muted-foreground text-center">Loading post...</p>
-      </BlogDetailsShell>
-    );
+    return <BlogDetailsSkeleton />;
   }
 
   if (error || !blog) {
@@ -114,7 +152,6 @@ export function BlogDetailsClient({ slug }: { slug: string }) {
                 className="inline-flex h-9 items-center gap-2 rounded-md border border-border px-3 text-sm font-medium text-muted-foreground transition-colors hover:border-foreground/40 hover:text-foreground"
               >
                 <Icon className="h-4 w-4" />
-                {social.label}
               </a>
             );
           })}

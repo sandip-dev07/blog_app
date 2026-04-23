@@ -28,7 +28,7 @@ export default function Navbar() {
           href="/"
           className="font-mono text-foreground transition-colors hover:text-primary"
         >
-          ~/sandip
+          ~/blogg-x
         </Link>
 
         <div className="hidden items-center gap-5 sm:flex">
