@@ -1,7 +1,7 @@
 "use client";
 
 import { Input } from "@/components/ui/input";
-import { debounce, useQueryState } from "nuqs";
+import { useQueryState } from "nuqs";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
@@ -10,7 +10,6 @@ export default function Navbar() {
   const [search, setSearch] = useQueryState("q", {
     history: "replace",
     shallow: true,
-    limitUrlUpdates: debounce(300),
   });
 
   if (
