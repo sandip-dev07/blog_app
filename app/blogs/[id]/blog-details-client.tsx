@@ -31,7 +31,7 @@ const socialLinks = [
   {
     href:
       process.env.NEXT_PUBLIC_LINKEDIN_URL ??
-      "https://www.linkedin.com/in/sandip-sarkar",
+      "https://www.linkedin.com/in/sarkar-sandip/",
     label: "LinkedIn",
     icon: FaLinkedinIn,
   },
