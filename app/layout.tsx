@@ -1,8 +1,20 @@
 import type { Metadata } from "next";
+import { Geist, Geist_Mono } from "next/font/google";
 import { Suspense } from "react";
+
 import "./globals.css";
-import Provider from "./provider";
 import Navbar from "./navbar";
+import Provider from "./provider";
+
+const geist = Geist({
+  subsets: ["latin"],
+  variable: "--font-geist",
+});
+
+const geistMono = Geist_Mono({
+  subsets: ["latin"],
+  variable: "--font-geist-mono",
+});
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
 const siteName = "~/sandip";
@@ -62,13 +74,8 @@ export default function RootLayout({
     <html
       lang="en"
       suppressHydrationWarning
-      className="h-full dark antialiased"
+      className={`${geist.variable} ${geistMono.variable} h-full dark antialiased`}
     >
-      <head>
-        {/* Load heading font and preconnect external domains */}
-        <link rel="preconnect" href="https://fonts.cdnfonts.com" />
-        <link rel="stylesheet" href="https://fonts.cdnfonts.com/css/satoshi" />
-      </head>
       <body className="min-h-full flex flex-col" suppressHydrationWarning>
         <Provider>
           <Suspense fallback={null}>
