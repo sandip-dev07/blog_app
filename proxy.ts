@@ -12,7 +12,7 @@ export async function proxy(request: NextRequest) {
     requestHeaders.set(BLOG_CLIENT_IP_HEADER, clientIp);
   }
 
-  if (pathname.startsWith("/api/blogs/")) {
+  if (pathname === "/api/blogs" || pathname.startsWith("/api/blogs/")) {
     return NextResponse.next({
       request: {
         headers: requestHeaders,
@@ -47,6 +47,7 @@ export async function proxy(request: NextRequest) {
 
 export const config = {
   matcher: [
+    "/api/blogs",
     "/api/blogs/:path*",
     "/xmdx/login",
     "/xmdx/editor/:path*",
