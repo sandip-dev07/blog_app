@@ -6,7 +6,6 @@ import { useQueryState } from "nuqs";
 import useSWR from "swr";
 
 import { Skeleton } from "@/components/ui/skeleton";
-import { useDebounce } from "@/hooks/use-debounce";
 
 type BlogSummary = {
   id: string;
@@ -45,10 +44,10 @@ function BlogListSkeleton() {
 }
 
 export default function BlogList() {
-  const [search] = useQueryState("q");
-  const debouncedSearch = useDebounce((search ?? "").trim(), 300);
-  const blogsUrl = debouncedSearch
-    ? `/api/blogs?q=${encodeURIComponent(debouncedSearch)}`
+  const [search] = useQueryState("search");
+  const normalizedSearch = (search ?? "").trim();
+  const blogsUrl = normalizedSearch
+    ? `/api/blogs?q=${encodeURIComponent(normalizedSearch)}`
     : "/api/blogs";
   const { data, error, isLoading } = useSWR<BlogsResponse>(blogsUrl);
   const posts = data?.blogs ?? [];
@@ -71,8 +70,8 @@ export default function BlogList() {
     return (
       <div id="posts" className="rounded-md border border-border px-5 py-8">
         <p className="text-sm text-muted-foreground text-center">
-          {debouncedSearch
-            ? `No posts found for "${debouncedSearch}".`
+          {normalizedSearch
+            ? `No posts found for "${normalizedSearch}".`
             : "No published posts yet."}
         </p>
       </div>
@@ -80,7 +79,7 @@ export default function BlogList() {
   }
 
   return (
-    <div id="posts" className="divide-y divide-border">
+    <div id="posts" className="">
       {posts.map((post) => (
         <Link
           key={post.id}
@@ -112,7 +111,7 @@ export default function BlogList() {
 
           <ArrowUpRight
             size={14}
-            className="mt-8 shrink-0 text-muted-foreground opacity-0 transition-all group-hover:-translate-y-0.5 group-hover:translate-x-0.5 group-hover:text-primary group-hover:opacity-100"
+            className="mt-8 shrink-0 text-muted-foreground/60 transition-colors group-hover:text-primary"
           />
         </Link>
       ))}

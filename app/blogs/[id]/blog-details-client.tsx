@@ -125,7 +125,7 @@ export function BlogDetailsClient({ slug }: { slug: string }) {
           <span>{blog.readTime}</span>
         </div>
 
-        <h1 className="text-[28px] font-medium leading-tight tracking-normal text-foreground">
+        <h1 className="text-[32px] font-semibold tracking-normal text-foreground">
           {blog.title}
         </h1>
       </header>

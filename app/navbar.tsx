@@ -1,17 +1,18 @@
 "use client";
 
-import { Input } from "@/components/ui/input";
-import { useQueryState } from "nuqs";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
+import { useQueryState } from "nuqs";
+
+import { Input } from "@/components/ui/input";
 
 export default function Navbar() {
+  const router = useRouter();
   const pathname = usePathname();
-  const [search, setSearch] = useQueryState("q", {
+  const [search, setSearch] = useQueryState("search", {
     history: "replace",
     shallow: true,
   });
-
   if (
     pathname.startsWith("/admin/editor") ||
     pathname.startsWith("/xmdx/editor") ||
@@ -31,16 +32,30 @@ export default function Navbar() {
         </Link>
 
         <div className="hidden items-center gap-5 sm:flex">
-          <Input
-            aria-label="Search posts"
-            placeholder="Search"
-            value={search ?? ""}
-            onChange={(event) => {
-              const value = event.target.value;
-              void setSearch(value || null);
+          <form
+            key={`${pathname}:${search ?? ""}`}
+            onSubmit={(event) => {
+              event.preventDefault();
+
+              const formData = new FormData(event.currentTarget);
+              const value = String(formData.get("search") ?? "").trim();
+
+              if (pathname === "/") {
+                void setSearch(value || null);
+                return;
+              }
+
+              router.push(value ? `/?search=${encodeURIComponent(value)}` : "/");
             }}
-            className="w-56"
-          />
+          >
+            <Input
+              name="search"
+              aria-label="Search posts"
+              placeholder="Search"
+              defaultValue={search ?? ""}
+              className="w-56"
+            />
+          </form>
         </div>
       </nav>
     </header>
