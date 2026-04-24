@@ -212,19 +212,29 @@ function BlogActionBar({ blog }: { blog: BlogDetail }) {
     }
 
     setIsSubmittingClap(true);
+    const optimisticSummary: BlogClapSummary = {
+      clapCount: clapCount + 1,
+      hasClapped: true,
+    };
 
     try {
-      const response = await fetch(clapEndpoint, {
-        method: "POST",
-      });
-      const payload = (await response.json()) as BlogClapSummary;
+      const payload = await mutateClapSummary(async (currentSummary) => {
+        const response = await fetch(clapEndpoint, {
+          method: "POST",
+        });
+        const nextSummary = (await response.json()) as BlogClapSummary;
 
-      if (!response.ok) {
-        toast.error(payload.message ?? "Could not save clap right now.");
-        return;
-      }
+        if (!response.ok) {
+          throw new Error(nextSummary.message ?? "Could not save clap right now.");
+        }
 
-      await mutateClapSummary(payload, {
+        return {
+          ...(currentSummary ?? optimisticSummary),
+          ...nextSummary,
+        };
+      }, {
+        optimisticData: optimisticSummary,
+        rollbackOnError: true,
         revalidate: false,
       });
 
@@ -239,7 +249,7 @@ function BlogActionBar({ blog }: { blog: BlogDetail }) {
     } finally {
       setIsSubmittingClap(false);
     }
-  }, [clapEndpoint, hasClapped, mutateClapSummary]);
+  }, [clapCount, clapEndpoint, hasClapped, mutateClapSummary]);
 
   const speechText = useMemo(
     () =>
