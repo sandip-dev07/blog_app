@@ -19,7 +19,7 @@ const geistMono = Geist_Mono({
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
 const siteName = "~/sandip";
 const siteDescription =
-  "Practical notes on backend design, system architecture, frontend engineering, AI, and building reliable software.";
+  "Practical insights on backend design, system architecture, frontend engineering, AI, and building reliable software.";
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),

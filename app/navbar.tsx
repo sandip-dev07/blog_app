@@ -31,7 +31,7 @@ export default function Navbar() {
           ~/blogg-x
         </Link>
 
-        <div className="hidden items-center gap-5 sm:flex">
+        <div className="items-center gap-5 flex">
           <form
             key={`${pathname}:${search ?? ""}`}
             onSubmit={(event) => {
