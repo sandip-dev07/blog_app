@@ -47,6 +47,7 @@ model Blog {
   publishedAt DateTime?
   authorId    String
   author      User       @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  claps       BlogClap[]
   createdAt   DateTime   @default(now())
   updatedAt   DateTime   @updatedAt
 
@@ -54,6 +55,18 @@ model Blog {
   @@index([authorId])
   @@index([status])
   @@map("blog")
+}
+
+model BlogClap {
+  id        String   @id
+  blogId    String
+  blog      Blog     @relation(fields: [blogId], references: [id], onDelete: Cascade)
+  ipHash    String
+  createdAt DateTime @default(now())
+
+  @@unique([blogId, ipHash])
+  @@index([blogId])
+  @@map("blog_clap")
 }
 
 model Session {
