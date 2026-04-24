@@ -238,6 +238,10 @@ function BlogActionBar({ blog }: { blog: BlogDetail }) {
         revalidate: false,
       });
 
+      if (!payload) {
+        return;
+      }
+
       if (payload.alreadyClapped) {
         toast.info("You already liked this post.");
         return;
