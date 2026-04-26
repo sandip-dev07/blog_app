@@ -4,19 +4,10 @@ import {
   Copy,
   Ellipsis,
   ThumbsUp,
-  Pause,
-  Play,
   Share2,
-  Square,
 } from "lucide-react";
 import Link from "next/link";
-import {
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { FaLinkedinIn, FaXTwitter } from "react-icons/fa6";
 import { toast } from "sonner";
 import useSWR from "swr";
@@ -31,21 +22,14 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 import { parseBlogTags } from "@/lib/utils";
 
-const PREFERRED_FEMALE_VOICE_PATTERNS = [
-  /female/i,
-  /woman/i,
-  /girl/i,
-  /zira/i,
-  /aria/i,
-  /samantha/i,
-  /victoria/i,
-  /karen/i,
-  /moira/i,
-  /fiona/i,
-  /ava/i,
-  /allison/i,
-  /susan/i,
-];
+const EMPTY_CLAP_SUMMARY: BlogClapSummary = {
+  clapCount: 0,
+  hasClapped: false,
+};
+const READING_PROGRESS_SHOW_AT = 0.08;
+const READING_PROGRESS_HIDE_OFFSET = 0.2;
+const PROGRESS_RING_RADIUS = 15;
+const PROGRESS_RING_CIRCUMFERENCE = 2 * Math.PI * PROGRESS_RING_RADIUS;
 
 type BlogDetail = {
   id: string;
@@ -70,35 +54,99 @@ type BlogClapSummary = {
   message?: string;
 };
 
-function stripHtmlForSpeech(html: string) {
-  return html
-    .replace(/<[^>]*>/g, " ")
-    .replace(/\s+/g, " ")
-    .trim();
-}
-
 function formatClapCount(clapCount: number) {
   return Intl.NumberFormat("en", { notation: "compact" }).format(clapCount);
 }
 
-function getPreferredFemaleVoice() {
-  if (typeof window === "undefined" || !("speechSynthesis" in window)) {
-    return null;
-  }
+function clamp(value: number, min: number, max: number) {
+  return Math.min(Math.max(value, min), max);
+}
 
-  const voices = window.speechSynthesis.getVoices();
+function useReadingProgress(targetRef: React.RefObject<HTMLDivElement | null>) {
+  const [readingState, setReadingState] = useState({
+    isVisible: false,
+    progress: 0,
+  });
 
-  if (!voices.length) {
-    return null;
-  }
+  useEffect(() => {
+    let frameId = 0;
 
-  return (
-    voices.find((voice) =>
-      PREFERRED_FEMALE_VOICE_PATTERNS.some((pattern) =>
-        pattern.test(voice.name),
-      ),
-    ) ?? null
-  );
+    const updateReadingState = () => {
+      const target = targetRef.current;
+
+      if (!target) {
+        return;
+      }
+
+      const rect = target.getBoundingClientRect();
+      const scrollTop = window.scrollY;
+      const viewportHeight = window.innerHeight;
+      const articleTop = rect.top + scrollTop;
+      const articleHeight = target.offsetHeight;
+      const articleBottom = articleTop + articleHeight;
+      const maxScrollableTop = Math.max(articleBottom - viewportHeight, articleTop);
+      const normalizedScrollTop = clamp(scrollTop, articleTop, maxScrollableTop);
+      const progressDenominator = Math.max(maxScrollableTop - articleTop, 1);
+      const nextProgress = clamp(
+        (normalizedScrollTop - articleTop) / progressDenominator,
+        0,
+        1,
+      );
+      const nextIsVisible =
+        nextProgress >= READING_PROGRESS_SHOW_AT &&
+        scrollTop < articleBottom - viewportHeight * READING_PROGRESS_HIDE_OFFSET;
+
+      setReadingState((currentState) => {
+        if (
+          currentState.isVisible === nextIsVisible &&
+          currentState.progress === nextProgress
+        ) {
+          return currentState;
+        }
+
+        return {
+          isVisible: nextIsVisible,
+          progress: nextProgress,
+        };
+      });
+    };
+
+    const requestUpdate = () => {
+      if (frameId) {
+        return;
+      }
+
+      frameId = window.requestAnimationFrame(() => {
+        frameId = 0;
+        updateReadingState();
+      });
+    };
+
+    updateReadingState();
+    window.addEventListener("scroll", requestUpdate, { passive: true });
+    window.addEventListener("resize", requestUpdate);
+
+    const resizeObserver =
+      typeof ResizeObserver === "undefined"
+        ? null
+        : new ResizeObserver(requestUpdate);
+
+    if (resizeObserver && targetRef.current) {
+      resizeObserver.observe(targetRef.current);
+    }
+
+    return () => {
+      if (frameId) {
+        window.cancelAnimationFrame(frameId);
+      }
+
+      window.removeEventListener("scroll", requestUpdate);
+      window.removeEventListener("resize", requestUpdate);
+      resizeObserver?.disconnect();
+    };
+  }, [targetRef]);
+
+  return readingState;
 }
 
 const socialLinks = [
@@ -191,17 +239,11 @@ function BlogDetailsSkeleton() {
 }
 
 function BlogActionBar({ blog }: { blog: BlogDetail }) {
-  const speechStartTimeoutRef = useRef<number | null>(null);
-  const [isReading, setIsReading] = useState(false);
-  const [isPaused, setIsPaused] = useState(false);
   const [isSubmittingClap, setIsSubmittingClap] = useState(false);
   const clapEndpoint = `/api/blogs/${encodeURIComponent(blog.slug)}/clap`;
   const { data: clapSummary, mutate: mutateClapSummary } =
     useSWR<BlogClapSummary>(clapEndpoint, {
-      fallbackData: {
-        clapCount: 0,
-        hasClapped: false,
-      },
+      fallbackData: EMPTY_CLAP_SUMMARY,
     });
   const clapCount = clapSummary?.clapCount ?? 0;
   const hasClapped = clapSummary?.hasClapped ?? false;
@@ -219,25 +261,30 @@ function BlogActionBar({ blog }: { blog: BlogDetail }) {
     };
 
     try {
-      const payload = await mutateClapSummary(async (currentSummary) => {
-        const response = await fetch(clapEndpoint, {
-          method: "POST",
-        });
-        const nextSummary = (await response.json()) as BlogClapSummary;
+      const payload = await mutateClapSummary(
+        async (currentSummary) => {
+          const response = await fetch(clapEndpoint, {
+            method: "POST",
+          });
+          const nextSummary = (await response.json()) as BlogClapSummary;
 
-        if (!response.ok) {
-          throw new Error(nextSummary.message ?? "Could not save clap right now.");
-        }
+          if (!response.ok) {
+            throw new Error(
+              nextSummary.message ?? "Could not save clap right now.",
+            );
+          }
 
-        return {
-          ...(currentSummary ?? optimisticSummary),
-          ...nextSummary,
-        };
-      }, {
-        optimisticData: optimisticSummary,
-        rollbackOnError: true,
-        revalidate: false,
-      });
+          return {
+            ...(currentSummary ?? optimisticSummary),
+            ...nextSummary,
+          };
+        },
+        {
+          optimisticData: optimisticSummary,
+          rollbackOnError: true,
+          revalidate: false,
+        },
+      );
 
       if (!payload) {
         return;
@@ -255,24 +302,6 @@ function BlogActionBar({ blog }: { blog: BlogDetail }) {
       setIsSubmittingClap(false);
     }
   }, [clapCount, clapEndpoint, hasClapped, mutateClapSummary]);
-
-  const speechText = useMemo(
-    () =>
-      `${blog.title}. ${blog.excerpt}. ${stripHtmlForSpeech(blog.contentHtml)}`,
-    [blog.contentHtml, blog.excerpt, blog.title],
-  );
-
-  useEffect(() => {
-    return () => {
-      if (speechStartTimeoutRef.current !== null) {
-        window.clearTimeout(speechStartTimeoutRef.current);
-      }
-
-      if (typeof window !== "undefined" && "speechSynthesis" in window) {
-        window.speechSynthesis.cancel();
-      }
-    };
-  }, []);
 
   const getShareUrl = useCallback(() => {
     if (typeof window !== "undefined") {
@@ -300,113 +329,6 @@ function BlogActionBar({ blog }: { blog: BlogDetail }) {
 
     window.open(url, "_blank", "noopener,noreferrer");
   }, []);
-
-  const stopReading = useCallback(() => {
-    if (typeof window === "undefined" || !("speechSynthesis" in window)) {
-      return;
-    }
-
-    if (speechStartTimeoutRef.current !== null) {
-      window.clearTimeout(speechStartTimeoutRef.current);
-      speechStartTimeoutRef.current = null;
-    }
-
-    window.speechSynthesis.cancel();
-    setIsReading(false);
-    setIsPaused(false);
-  }, []);
-
-  const pauseReading = useCallback(() => {
-    if (typeof window === "undefined" || !("speechSynthesis" in window)) {
-      return;
-    }
-
-    window.speechSynthesis.pause();
-    setIsPaused(true);
-  }, []);
-
-  const resumeReading = useCallback(() => {
-    if (typeof window === "undefined" || !("speechSynthesis" in window)) {
-      return;
-    }
-
-    window.speechSynthesis.resume();
-    setIsPaused(false);
-  }, []);
-
-  const handleVoiceToggle = useCallback(() => {
-    if (typeof window === "undefined" || !("speechSynthesis" in window)) {
-      toast.error("Voice reading is not supported in this browser.");
-      return;
-    }
-
-    if (isReading && isPaused) {
-      resumeReading();
-      return;
-    }
-
-    if (isReading) {
-      pauseReading();
-      return;
-    }
-
-    const utterance = new SpeechSynthesisUtterance(speechText);
-    const preferredVoice = getPreferredFemaleVoice();
-
-    if (preferredVoice) {
-      utterance.voice = preferredVoice;
-    }
-
-    utterance.rate = 1;
-    utterance.pitch = 1;
-    utterance.onstart = () => {
-      if (speechStartTimeoutRef.current !== null) {
-        window.clearTimeout(speechStartTimeoutRef.current);
-        speechStartTimeoutRef.current = null;
-      }
-
-      setIsReading(true);
-      setIsPaused(false);
-    };
-    utterance.onend = () => {
-      if (speechStartTimeoutRef.current !== null) {
-        window.clearTimeout(speechStartTimeoutRef.current);
-        speechStartTimeoutRef.current = null;
-      }
-
-      setIsReading(false);
-      setIsPaused(false);
-    };
-    utterance.onerror = () => {
-      if (speechStartTimeoutRef.current !== null) {
-        window.clearTimeout(speechStartTimeoutRef.current);
-        speechStartTimeoutRef.current = null;
-      }
-
-      setIsReading(false);
-      setIsPaused(false);
-      toast.error("Could not start voice reading.");
-    };
-
-    window.speechSynthesis.cancel();
-    window.speechSynthesis.speak(utterance);
-    speechStartTimeoutRef.current = window.setTimeout(() => {
-      if (!window.speechSynthesis.speaking && !window.speechSynthesis.pending) {
-        const voices = window.speechSynthesis.getVoices();
-
-        if (!utterance.voice && voices.length > 0) {
-          const fallbackVoice = getPreferredFemaleVoice() ?? voices[0];
-
-          if (fallbackVoice) {
-            utterance.voice = fallbackVoice;
-          }
-        }
-
-        window.speechSynthesis.cancel();
-        window.speechSynthesis.speak(utterance);
-      }
-    }, 150);
-  }, [isPaused, isReading, pauseReading, resumeReading, speechText]);
 
   const handleShare = useCallback(async () => {
     const shareUrl = getShareUrl();
@@ -449,41 +371,6 @@ function BlogActionBar({ blog }: { blog: BlogDetail }) {
       </div>
 
       <div className="flex items-center gap-1">
-        <Button
-          type="button"
-          variant="ghost"
-          size="icon-sm"
-          aria-label={
-            isReading
-              ? isPaused
-                ? "Resume reading aloud"
-                : "Pause reading aloud"
-              : "Read aloud"
-          }
-          onClick={handleVoiceToggle}
-        >
-          {isReading ? (
-            isPaused ? (
-              <Play className="h-4 w-4" />
-            ) : (
-              <Pause className="h-4 w-4" />
-            )
-          ) : (
-            <Play className="h-4 w-4" />
-          )}
-        </Button>
-
-        <Button
-          type="button"
-          variant="ghost"
-          size="icon-sm"
-          aria-label="Stop reading aloud"
-          disabled={!isReading && !isPaused}
-          onClick={stopReading}
-        >
-          <Square className="h-4 w-4" />
-        </Button>
-
         <Button
           type="button"
           variant="ghost"
@@ -546,12 +433,80 @@ function BlogActionBar({ blog }: { blog: BlogDetail }) {
   );
 }
 
+function ReadingProgressIsland({
+  title,
+  targetRef,
+}: {
+  title: string;
+  targetRef: React.RefObject<HTMLDivElement | null>;
+}) {
+  const { isVisible, progress } = useReadingProgress(targetRef);
+  const progressValue = Math.round(progress * 100);
+  const progressLabel = `${Math.round(progress * 100)}%`;
+  const strokeDashoffset = PROGRESS_RING_CIRCUMFERENCE * (1 - progress);
+
+  return (
+    <div
+      className={`pointer-events-none fixed inset-x-0 bottom-5 z-50 flex justify-center px-4 transition-all duration-500 ease-out ${
+        isVisible
+          ? "translate-y-0 scale-100 opacity-100"
+          : "translate-y-5 scale-95 opacity-0"
+      }`}
+      aria-hidden={!isVisible}
+    >
+      <div className="pointer-events-auto flex w-full max-w-xs items-center gap-2 rounded-full border border-white/10 bg-muted px-2 pl-3 py-1 text-white shadow-[0_18px_50px_rgba(15,23,42,0.45)] backdrop-blur-xl">
+        <div className="h-2 w-2 shrink-0 rounded-full bg-white/85" />
+        <div className="min-w-0 flex-1">
+          <p className="truncate text-sm font-medium tracking-tight text-white">
+            {title}
+          </p>
+        </div>
+
+        <div className="relative flex h-11 w-11 shrink-0 items-center justify-center">
+          <svg
+            className="-rotate-90"
+            width="44"
+            height="44"
+            viewBox="0 0 44 44"
+            role="img"
+            aria-label={`Reading progress ${progressLabel}`}
+          >
+            <circle
+              cx="22"
+              cy="22"
+              r={PROGRESS_RING_RADIUS}
+              fill="none"
+              stroke="rgba(148, 163, 184, 0.22)"
+              strokeWidth="3.5"
+            />
+            <circle
+              cx="22"
+              cy="22"
+              r={PROGRESS_RING_RADIUS}
+              fill="none"
+              stroke="rgba(255, 255, 255, 0.96)"
+              strokeWidth="3.5"
+              strokeLinecap="round"
+              strokeDasharray={PROGRESS_RING_CIRCUMFERENCE}
+              strokeDashoffset={strokeDashoffset}
+            />
+          </svg>
+          <span className="absolute text-[10px] font-semibold text-white">
+            {progressValue}
+          </span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export function BlogDetailsClient({ slug }: { slug: string }) {
   const { data, error, isLoading } = useSWR<BlogDetailResponse>(
     `/api/blogs/${encodeURIComponent(slug)}`,
   );
   const blog = data?.blog ?? null;
   const blogTags = parseBlogTags(blog?.tag);
+  const articleContentRef = useRef<HTMLDivElement | null>(null);
 
   if (isLoading) {
     return <BlogDetailsSkeleton />;
@@ -592,8 +547,14 @@ export function BlogDetailsClient({ slug }: { slug: string }) {
       <BlogActionBar blog={blog} />
 
       <div
+        ref={articleContentRef}
         className="blog-editor-content ProseMirror pt-7"
         dangerouslySetInnerHTML={{ __html: blog.contentHtml }}
+      />
+
+      <ReadingProgressIsland
+        title={blog.title}
+        targetRef={articleContentRef}
       />
 
       <footer className="mt-12 border-t border-border pt-6">

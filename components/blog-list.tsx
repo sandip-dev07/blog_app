@@ -6,6 +6,7 @@ import { useQueryState } from "nuqs";
 import useSWR from "swr";
 
 import { Skeleton } from "@/components/ui/skeleton";
+import { parseBlogTags } from "@/lib/utils";
 
 type BlogSummary = {
   id: string;
@@ -96,9 +97,14 @@ export default function BlogList() {
             </p>
 
             <div className="mt-3 flex flex-wrap items-center gap-2">
-              <span className="rounded-md bg-secondary px-2 py-0.5 font-mono text-[11px] leading-4 text-secondary-foreground">
-                {post.tag}
-              </span>
+              {parseBlogTags(post.tag).map((tag) => (
+                <span
+                  key={tag}
+                  className="rounded-md bg-secondary px-2 py-0.5 font-mono text-[11px] leading-4 text-secondary-foreground"
+                >
+                  {tag}
+                </span>
+              ))}
               <span className="text-xs text-muted-foreground">
                 {post.date}
               </span>
