@@ -42,7 +42,7 @@ export default function XmdxSignup() {
       name,
       email,
       password,
-      callbackURL: "/xmdx/editor",
+      callbackURL: "/xmdx/login",
     });
 
     setIsPending(false);
@@ -53,7 +53,7 @@ export default function XmdxSignup() {
     }
 
     toast.success("Account created.");
-    router.push("/xmdx/editor");
+    router.push("/xmdx/login");
     router.refresh();
   }
 
