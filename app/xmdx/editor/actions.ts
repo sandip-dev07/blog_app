@@ -5,6 +5,7 @@ import { revalidatePath, revalidateTag } from "next/cache";
 import { uploadDataUriImage } from "@/lib/cloudinary";
 import { BlogStatus, type Prisma } from "@/lib/prisma";
 import { getPublishedBlogTag } from "@/lib/public-blogs";
+import { formatBlogTags } from "@/lib/utils";
 import { requireXmdxAdminUser } from "@/lib/xmdx-admin";
 import { db } from "@/server/db";
 
@@ -97,7 +98,7 @@ function findCoverImage(html: string) {
 export async function saveBlog(input: SaveBlogInput) {
   const user = await requireXmdxAdminUser();
   const title = input.title.trim() || "Untitled post";
-  const tag = input.tag.trim() || "Blog";
+  const tag = formatBlogTags(input.tag);
   const status =
     input.status === "PUBLISHED" ? BlogStatus.PUBLISHED : BlogStatus.DRAFT;
   const imageSources = collectDataUriImages(input.contentHtml);
@@ -148,6 +149,7 @@ export async function saveBlog(input: SaveBlogInput) {
         select: {
           id: true,
           slug: true,
+          tag: true,
           status: true,
         },
       })
@@ -167,6 +169,7 @@ export async function saveBlog(input: SaveBlogInput) {
         select: {
           id: true,
           slug: true,
+          tag: true,
           status: true,
         },
       });

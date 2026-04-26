@@ -29,6 +29,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Skeleton } from "@/components/ui/skeleton";
+import { parseBlogTags } from "@/lib/utils";
 
 const PREFERRED_FEMALE_VOICE_PATTERNS = [
   /female/i,
@@ -550,6 +551,7 @@ export function BlogDetailsClient({ slug }: { slug: string }) {
     `/api/blogs/${encodeURIComponent(slug)}`,
   );
   const blog = data?.blog ?? null;
+  const blogTags = parseBlogTags(blog?.tag);
 
   if (isLoading) {
     return <BlogDetailsSkeleton />;
@@ -569,9 +571,14 @@ export function BlogDetailsClient({ slug }: { slug: string }) {
     <BlogDetailsShell>
       <header className="border-b border-border pb-7">
         <div className="mb-3 flex flex-wrap items-center gap-2 text-[11px] text-muted-foreground">
-          <span className="rounded-full bg-secondary px-2 py-0.5 font-medium text-secondary-foreground">
-            {blog.tag}
-          </span>
+          {blogTags.map((tag) => (
+            <span
+              key={tag}
+              className="rounded-full bg-secondary px-2 py-0.5 font-medium text-secondary-foreground"
+            >
+              {tag}
+            </span>
+          ))}
           <span>{blog.date}</span>
           <span aria-hidden="true">&middot;</span>
           <span>{blog.readTime}</span>

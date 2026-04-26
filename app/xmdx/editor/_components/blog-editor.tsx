@@ -13,12 +13,20 @@ import Underline from "@tiptap/extension-underline";
 import type { JSONContent } from "@tiptap/core";
 import { EditorContent, useEditor } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
-import { CheckCircle2, Eye, Loader2, MoveLeft, Pencil } from "lucide-react";
+import {
+  CheckCircle2,
+  Eye,
+  Loader2,
+  MoveLeft,
+  Pencil,
+  X,
+} from "lucide-react";
 import NextLink from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
+import { formatBlogTags, parseBlogTags } from "@/lib/utils";
 
 import { saveBlog } from "../actions";
 import { FloatingDock } from "./floating-dock";
@@ -52,11 +60,14 @@ export function BlogEditor({ initialBlog = null }: BlogEditorProps) {
   const [savingBlogStatus, setSavingBlogStatus] =
     useState<BlogSaveStatus | null>(null);
   const [title, setTitle] = useState(initialBlog?.title ?? DEFAULT_TITLE);
-  const [tag, setTag] = useState(initialBlog?.tag ?? DEFAULT_TAG);
+  const [tags, setTags] = useState(parseBlogTags(initialBlog?.tag ?? DEFAULT_TAG));
+  const [tagInput, setTagInput] = useState("");
   const saveTimer = useRef<number | null>(null);
+  const tagInputRef = useRef<HTMLInputElement | null>(null);
   const contentStorageKey = blogId ? `${STORAGE_KEY}:${blogId}` : STORAGE_KEY;
   const titleStorageKey = blogId ? `${TITLE_KEY}:${blogId}` : TITLE_KEY;
   const tagStorageKey = blogId ? `${TAG_KEY}:${blogId}` : TAG_KEY;
+  const formattedTags = formatBlogTags(tags.join(", "));
 
   const persist = (json: unknown) => {
     try {
@@ -133,7 +144,8 @@ export function BlogEditor({ initialBlog = null }: BlogEditorProps) {
     if (initialBlog) {
       editor.commands.setContent(initialBlog.contentJson);
       setTitle(initialBlog.title);
-      setTag(initialBlog.tag);
+      setTags(parseBlogTags(initialBlog.tag));
+      setTagInput("");
       setBlogId(initialBlog.id);
       return;
     }
@@ -153,7 +165,10 @@ export function BlogEditor({ initialBlog = null }: BlogEditorProps) {
       }
 
       if (savedTag) {
-        window.setTimeout(() => setTag(savedTag), 0);
+        window.setTimeout(() => {
+          setTags(parseBlogTags(savedTag));
+          setTagInput("");
+        }, 0);
       }
 
       if (savedBlogId) {
@@ -174,11 +189,11 @@ export function BlogEditor({ initialBlog = null }: BlogEditorProps) {
 
   useEffect(() => {
     try {
-      localStorage.setItem(tagStorageKey, tag);
+      localStorage.setItem(tagStorageKey, formattedTags);
     } catch {
       toast.error("Could not save the tag to browser storage.");
     }
-  }, [tag, tagStorageKey]);
+  }, [formattedTags, tagStorageKey]);
 
   useEffect(() => {
     return () => {
@@ -216,7 +231,7 @@ export function BlogEditor({ initialBlog = null }: BlogEditorProps) {
       const savedBlog = await saveBlog({
         id: blogId,
         title,
-        tag,
+        tag: formattedTags,
         contentJson,
         contentHtml,
         status: blogStatus,
@@ -224,6 +239,8 @@ export function BlogEditor({ initialBlog = null }: BlogEditorProps) {
 
       setBlogId(savedBlog.id);
       editor.commands.setContent(savedBlog.contentJson as JSONContent);
+      setTags(parseBlogTags(savedBlog.tag));
+      setTagInput("");
 
       try {
         localStorage.setItem(BLOG_ID_KEY, savedBlog.id);
@@ -232,7 +249,7 @@ export function BlogEditor({ initialBlog = null }: BlogEditorProps) {
           JSON.stringify(savedBlog.contentJson)
         );
         localStorage.setItem(`${TITLE_KEY}:${savedBlog.id}`, title);
-        localStorage.setItem(`${TAG_KEY}:${savedBlog.id}`, tag);
+        localStorage.setItem(`${TAG_KEY}:${savedBlog.id}`, formatBlogTags(savedBlog.tag));
       } catch {
         toast.error("Saved online, but local draft could not be updated.");
       }
@@ -258,7 +275,8 @@ export function BlogEditor({ initialBlog = null }: BlogEditorProps) {
 
     editor.commands.setContent(DEFAULT_CONTENT);
     setTitle(DEFAULT_TITLE);
-    setTag(DEFAULT_TAG);
+    setTags([DEFAULT_TAG]);
+    setTagInput("");
 
     try {
       localStorage.removeItem(STORAGE_KEY);
@@ -291,6 +309,41 @@ export function BlogEditor({ initialBlog = null }: BlogEditorProps) {
         : status === "error"
           ? "Save failed"
           : "Ready";
+
+  const commitTagInput = (value: string) => {
+    const nextTags = value
+      .split(",")
+      .map((item) => item.trim())
+      .filter(Boolean);
+
+    if (!nextTags.length) {
+      return;
+    }
+
+    setTags((currentTags) => {
+      const mergedTags =
+        currentTags.length === 1 && currentTags[0] === DEFAULT_TAG
+          ? []
+          : [...currentTags];
+
+      nextTags.forEach((nextTag) => {
+        if (!mergedTags.includes(nextTag)) {
+          mergedTags.push(nextTag);
+        }
+      });
+
+      return mergedTags.length ? mergedTags : [DEFAULT_TAG];
+    });
+    setTagInput("");
+  };
+
+  const removeTag = (tagToRemove: string) => {
+    setTags((currentTags) => {
+      const nextTags = currentTags.filter((currentTag) => currentTag !== tagToRemove);
+
+      return nextTags.length ? nextTags : [DEFAULT_TAG];
+    });
+  };
 
   return (
     <main className="min-h-screen bg-background text-foreground">
@@ -382,9 +435,16 @@ export function BlogEditor({ initialBlog = null }: BlogEditorProps) {
               <h1 className="text-4xl font-bold tracking-normal text-foreground md:text-5xl">
                 {title || "Untitled"}
               </h1>
-              <p className="mt-6 w-fit rounded-md border border-border bg-muted px-2.5 py-1 text-xs font-medium text-muted-foreground">
-                {tag || DEFAULT_TAG}
-              </p>
+              <div className="mt-6 flex flex-wrap gap-2">
+                {tags.map((tagItem) => (
+                  <p
+                    key={tagItem}
+                    className="w-fit rounded-md border border-border bg-muted px-2.5 py-1 text-xs font-medium text-muted-foreground"
+                  >
+                    {tagItem}
+                  </p>
+                ))}
+              </div>
             </>
           ) : (
             <>
@@ -395,13 +455,67 @@ export function BlogEditor({ initialBlog = null }: BlogEditorProps) {
                 aria-label="Post title"
                 className="w-full border-0 bg-transparent text-4xl font-bold tracking-normal text-foreground outline-none placeholder:text-muted-foreground/40 md:text-5xl"
               />
-              <input
-                value={tag}
-                onChange={(event) => setTag(event.target.value)}
-                placeholder="Category"
-                aria-label="Blog category"
-                className="mt-6 h-9 w-full max-w-44 rounded-md border border-border bg-transparent px-3 text-sm font-medium text-foreground outline-none transition placeholder:text-muted-foreground/50 focus:border-ring focus:ring-3 focus:ring-ring/50"
-              />
+              <div
+                className="mt-6 flex min-h-11 w-full max-w-md flex-wrap items-center gap-2 rounded-xl border border-border bg-background px-3 py-2 transition focus-within:border-ring focus-within:ring-3 focus-within:ring-ring/50"
+                onClick={() => tagInputRef.current?.focus()}
+              >
+                {tags.map((tagItem) => (
+                  <span
+                    key={tagItem}
+                    className="inline-flex items-center gap-1.5 rounded-full border border-border bg-muted px-3 py-1 text-sm font-medium text-foreground"
+                  >
+                    {tagItem}
+                    {tagItem !== DEFAULT_TAG || tags.length > 1 ? (
+                      <button
+                        type="button"
+                        onClick={(event) => {
+                          event.stopPropagation();
+                          removeTag(tagItem);
+                        }}
+                        className="rounded-full text-muted-foreground transition hover:text-foreground"
+                        aria-label={`Remove ${tagItem} tag`}
+                      >
+                        <X className="h-3.5 w-3.5" />
+                      </button>
+                    ) : null}
+                  </span>
+                ))}
+                <input
+                  ref={tagInputRef}
+                  value={tagInput}
+                  onChange={(event) => {
+                    const nextValue = event.target.value;
+
+                    if (nextValue.includes(",")) {
+                      commitTagInput(nextValue);
+                      return;
+                    }
+
+                    setTagInput(nextValue);
+                  }}
+                  onBlur={() => commitTagInput(tagInput)}
+                  onKeyDown={(event) => {
+                    if (event.key === "Enter") {
+                      event.preventDefault();
+                      commitTagInput(tagInput);
+                      return;
+                    }
+
+                    if (event.key === "Backspace" && !tagInput) {
+                      setTags((currentTags) => {
+                        if (currentTags.length <= 1) {
+                          return currentTags;
+                        }
+
+                        return currentTags.slice(0, -1);
+                      });
+                    }
+                  }}
+                  placeholder={tags.length ? "Add tag" : "Tags"}
+                  aria-label="Blog tags"
+                  className="h-7 min-w-24 flex-1 border-0 bg-transparent text-sm font-medium text-foreground outline-none placeholder:text-muted-foreground/50"
+                />
+              </div>
             </>
           )}
         </div>

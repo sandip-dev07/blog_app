@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 
 import { Button } from "@/components/ui/button";
 import { BlogStatus } from "@/lib/prisma";
+import { parseBlogTags } from "@/lib/utils";
 import { getXmdxAdminUser } from "@/lib/xmdx-admin";
 import { db } from "@/server/db";
 import { DeleteBlogButton } from "./delete-blog-button";
@@ -100,9 +101,16 @@ export default async function XmdxBlogsPage() {
                       <h2 className="truncate text-base font-semibold text-foreground">
                         {blog.title}
                       </h2>
-                      <p className="mt-1 text-xs font-medium text-muted-foreground">
-                        {blog.tag}
-                      </p>
+                      <div className="mt-1 flex flex-wrap gap-1.5">
+                        {parseBlogTags(blog.tag).map((tag) => (
+                          <p
+                            key={tag}
+                            className="text-xs font-medium text-muted-foreground"
+                          >
+                            {tag}
+                          </p>
+                        ))}
+                      </div>
                       <p className="mt-1 line-clamp-1 text-sm leading-6 text-muted-foreground">
                         {getExcerpt(blog.contentHtml) || "No preview text yet."}
                       </p>
