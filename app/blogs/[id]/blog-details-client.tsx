@@ -1,6 +1,7 @@
 "use client";
 
 import {
+  ArrowUp,
   Copy,
   Ellipsis,
   ThumbsUp,
@@ -26,7 +27,7 @@ const EMPTY_CLAP_SUMMARY: BlogClapSummary = {
   clapCount: 0,
   hasClapped: false,
 };
-const READING_PROGRESS_SHOW_AT = 0.08;
+const READING_PROGRESS_SHOW_AT = 0.05;
 const READING_PROGRESS_HIDE_OFFSET = 0.2;
 const PROGRESS_RING_RADIUS = 15;
 const PROGRESS_RING_CIRCUMFERENCE = 2 * Math.PI * PROGRESS_RING_RADIUS;
@@ -444,6 +445,14 @@ function ReadingProgressIsland({
   const progressValue = Math.round(progress * 100);
   const progressLabel = `${Math.round(progress * 100)}%`;
   const strokeDashoffset = PROGRESS_RING_CIRCUMFERENCE * (1 - progress);
+  const [isProgressHovered, setIsProgressHovered] = useState(false);
+
+  const scrollToTop = useCallback(() => {
+    window.scrollTo({
+      top: 0,
+      behavior: "smooth",
+    });
+  }, []);
 
   return (
     <div
@@ -462,9 +471,20 @@ function ReadingProgressIsland({
           </p>
         </div>
 
-        <div className="relative flex h-11 w-11 shrink-0 items-center justify-center">
+        <button
+          type="button"
+          onClick={scrollToTop}
+          onMouseEnter={() => setIsProgressHovered(true)}
+          onMouseLeave={() => setIsProgressHovered(false)}
+          onFocus={() => setIsProgressHovered(true)}
+          onBlur={() => setIsProgressHovered(false)}
+          className="relative flex h-11 w-11 shrink-0 items-center justify-center rounded-full transition-transform cursor-pointer duration-200 hover:scale-105 focus-visible:scale-105 focus-visible:outline-none"
+          aria-label="Scroll to top"
+        >
           <svg
-            className="-rotate-90"
+            className={`-rotate-90 transition-opacity duration-200 ${
+              isProgressHovered ? "opacity-80" : "opacity-100"
+            }`}
             width="44"
             height="44"
             viewBox="0 0 44 44"
@@ -491,10 +511,19 @@ function ReadingProgressIsland({
               strokeDashoffset={strokeDashoffset}
             />
           </svg>
-          <span className="absolute text-[10px] font-semibold text-white">
-            {progressValue}
+          <span className="absolute flex items-center justify-center text-[10px] font-semibold text-white transition-opacity duration-200">
+            <span className={isProgressHovered ? "opacity-0" : "opacity-100"}>
+              {progressValue}
+            </span>
           </span>
-        </div>
+          <ArrowUp
+            className={`absolute h-4 w-4 text-white transition-all duration-200 ${
+              isProgressHovered
+                ? "translate-y-0 opacity-100"
+                : "translate-y-1 opacity-0"
+            }`}
+          />
+        </button>
       </div>
     </div>
   );
