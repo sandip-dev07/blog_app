@@ -81,12 +81,16 @@ export default function BlogList() {
 
   return (
     <div id="posts" className="">
-      {posts.map((post) => (
+      {posts.map((post, index) => (
         <Link
           key={post.id}
           href={`/blogs/${post.slug}`}
-          className="group flex items-start justify-between gap-4 rounded-md py-5 transition-colors hover:bg-card/60 sm:-mx-3 sm:px-3"
+          className="group flex items-start gap-4 rounded-md py-5 transition-colors hover:bg-card/60 sm:-mx-3 sm:px-3"
         >
+          <span className="mt-0.5 shrink-0 font-mono text-sm font-semibold tracking-[0.28em] text-muted-foreground/70 transition-colors group-hover:text-primary">
+            {String(index + 1).padStart(2, "0")}
+          </span>
+
           <div className="min-w-0 flex-1">
             <h3 className="text-base font-medium tracking-normal text-foreground transition-colors group-hover:text-primary">
               {post.title}
@@ -117,7 +121,7 @@ export default function BlogList() {
 
           <ArrowUpRight
             size={14}
-            className="mt-8 shrink-0 text-muted-foreground/60 transition-colors group-hover:text-primary"
+            className="mt-8 shrink-0 text-muted-foreground/60 transition-colors group-hover:text-primary sm:ml-auto"
           />
         </Link>
       ))}
