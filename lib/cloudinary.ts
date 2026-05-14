@@ -11,6 +11,8 @@ cloudinary.config({
   secure: true,
 });
 
+const BLOG_UPLOAD_FOLDER = "xmdx/blogs";
+
 const BLOG_UPLOAD_TRANSFORMATION = [
   {
     crop: "limit",
@@ -18,6 +20,8 @@ const BLOG_UPLOAD_TRANSFORMATION = [
     quality: "auto:best",
   },
 ] as const;
+
+const BLOG_DIRECT_UPLOAD_TRANSFORMATION = "c_limit,w_2400,q_auto:best";
 
 const BLOG_DELIVERY_TRANSFORMATION = [
   {
@@ -42,7 +46,7 @@ export async function uploadDataUriImage(dataUri: string) {
   }
 
   const result = await cloudinary.uploader.upload(dataUri, {
-    folder: "xmdx/blogs",
+    folder: BLOG_UPLOAD_FOLDER,
     overwrite: false,
     resource_type: "image",
     transformation: BLOG_UPLOAD_TRANSFORMATION,
@@ -51,6 +55,38 @@ export async function uploadDataUriImage(dataUri: string) {
   });
 
   return getOptimizedImageUrl(result.public_id);
+}
+
+export function createBlogImageUploadSignature() {
+  const cloudName =
+    process.env.CLOUDINARY_CLOUD_NAME ||
+    process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME;
+  const apiKey =
+    process.env.CLOUDINARY_API_KEY ||
+    process.env.NEXT_PUBLIC_CLOUDINARY_API_KEY;
+
+  if (!cloudName || !apiKey || !process.env.CLOUDINARY_API_SECRET) {
+    throw new Error("Cloudinary upload is not configured.");
+  }
+
+  const timestamp = Math.floor(Date.now() / 1000);
+  const paramsToSign = {
+    folder: BLOG_UPLOAD_FOLDER,
+    timestamp,
+    transformation: BLOG_DIRECT_UPLOAD_TRANSFORMATION,
+  };
+
+  return {
+    apiKey,
+    cloudName,
+    folder: BLOG_UPLOAD_FOLDER,
+    signature: cloudinary.utils.api_sign_request(
+      paramsToSign,
+      process.env.CLOUDINARY_API_SECRET
+    ),
+    timestamp,
+    transformation: BLOG_DIRECT_UPLOAD_TRANSFORMATION,
+  };
 }
 
 export default cloudinary;

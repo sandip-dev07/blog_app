@@ -100,7 +100,7 @@ export function BlogEditor({ initialBlog = null }: BlogEditorProps) {
           target: "_blank",
         },
       }),
-      Image.configure({ allowBase64: true, inline: false }),
+      Image.configure({ allowBase64: false, inline: false }),
       TaskList,
       TaskItem.configure({ nested: true }),
       Placeholder.configure({
