@@ -156,7 +156,7 @@ export function FloatingDock({
           <DockItem label="Strikethrough" disabled={disabled} active={editor?.isActive("strike")} onClick={() => editor?.chain().focus().toggleStrike().run()}>
             <Strikethrough className="h-4 w-4" />
           </DockItem>
-          <DockItem label="Code box" disabled={disabled} active={editor?.isActive("codeBlock")} onClick={() => editor?.chain().focus().toggleCodeBlock().run()}>
+          <DockItem label="Code box" disabled={disabled} active={editor?.isActive("codeBlock")} onClick={() => editor?.chain().focus().toggleCodeBlock({ language: "javascript" }).run()}>
             <Code className="h-4 w-4" />
           </DockItem>
           <DockItem label="Highlight" disabled={disabled} active={editor?.isActive("highlight")} onClick={() => editor?.chain().focus().toggleHighlight().run()}>

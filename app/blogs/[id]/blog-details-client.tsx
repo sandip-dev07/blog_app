@@ -1,12 +1,6 @@
 "use client";
 
-import {
-  ArrowUp,
-  Copy,
-  Ellipsis,
-  ThumbsUp,
-  Share2,
-} from "lucide-react";
+import { ArrowUp, Copy, Ellipsis, Share2, ThumbsUp } from "lucide-react";
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { FaLinkedinIn, FaXTwitter } from "react-icons/fa6";
@@ -21,16 +15,16 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Skeleton } from "@/components/ui/skeleton";
-import { parseBlogTags } from "@/lib/utils";
+import { highlightCodeBlocks } from "@/lib/syntax-highlighting";
+import { cn, parseBlogTags } from "@/lib/utils";
 
 const EMPTY_CLAP_SUMMARY: BlogClapSummary = {
   clapCount: 0,
   hasClapped: false,
 };
-const READING_PROGRESS_SHOW_AT = 0.05;
+const READING_PROGRESS_SHOW_AT = 0.01;
 const READING_PROGRESS_HIDE_OFFSET = 0.2;
-const PROGRESS_RING_RADIUS = 15;
-const PROGRESS_RING_CIRCUMFERENCE = 2 * Math.PI * PROGRESS_RING_RADIUS;
+const CLAP_COUNT_FORMATTER = Intl.NumberFormat("en", { notation: "compact" });
 
 type BlogDetail = {
   id: string;
@@ -56,7 +50,7 @@ type BlogClapSummary = {
 };
 
 function formatClapCount(clapCount: number) {
-  return Intl.NumberFormat("en", { notation: "compact" }).format(clapCount);
+  return CLAP_COUNT_FORMATTER.format(clapCount);
 }
 
 function clamp(value: number, min: number, max: number) {
@@ -85,7 +79,10 @@ function useReadingProgress(targetRef: React.RefObject<HTMLDivElement | null>) {
       const articleTop = rect.top + scrollTop;
       const articleHeight = target.offsetHeight;
       const articleBottom = articleTop + articleHeight;
-      const maxScrollableTop = Math.max(articleBottom - viewportHeight, articleTop);
+      const maxScrollableTop = Math.max(
+        articleBottom - viewportHeight,
+        articleTop,
+      );
       const normalizedScrollTop = clamp(scrollTop, articleTop, maxScrollableTop);
       const progressDenominator = Math.max(maxScrollableTop - articleTop, 1);
       const nextProgress = clamp(
@@ -365,7 +362,10 @@ function BlogActionBar({ blog }: { blog: BlogDetail }) {
           className="inline-flex items-center gap-2 transition-colors hover:text-foreground"
         >
           <ThumbsUp
-            className={`h-4 w-4 ${hasClapped ? "fill-foreground text-foreground" : ""}`}
+            className={cn(
+              "h-4 w-4",
+              hasClapped && "fill-foreground text-foreground",
+            )}
           />
           <span>{formatClapCount(clapCount)}</span>
         </button>
@@ -435,16 +435,14 @@ function BlogActionBar({ blog }: { blog: BlogDetail }) {
 }
 
 function ReadingProgressIsland({
-  title,
   targetRef,
 }: {
-  title: string;
   targetRef: React.RefObject<HTMLDivElement | null>;
 }) {
   const { isVisible, progress } = useReadingProgress(targetRef);
   const progressValue = Math.round(progress * 100);
-  const progressLabel = `${Math.round(progress * 100)}%`;
-  const strokeDashoffset = PROGRESS_RING_CIRCUMFERENCE * (1 - progress);
+  const progressLabel = `${progressValue}%`;
+  const progressDegrees = `${progress * 360}deg`;
   const [isProgressHovered, setIsProgressHovered] = useState(false);
 
   const scrollToTop = useCallback(() => {
@@ -456,75 +454,58 @@ function ReadingProgressIsland({
 
   return (
     <div
-      className={`pointer-events-none fixed inset-x-0 bottom-5 z-50 flex justify-center px-4 transition-all duration-500 ease-out ${
+      className={cn(
+        "pointer-events-none fixed right-3 bottom-4 z-50 flex justify-center transition-all duration-500 ease-out",
         isVisible
           ? "translate-y-0 scale-100 opacity-100"
-          : "translate-y-5 scale-95 opacity-0"
-      }`}
+          : "translate-y-5 scale-95 opacity-0",
+      )}
       aria-hidden={!isVisible}
     >
-      <div className="pointer-events-auto flex w-full max-w-xs items-center gap-2 rounded-full border border-white/10 bg-muted px-2 pl-3 py-1 text-white shadow-[0_18px_50px_rgba(15,23,42,0.45)] backdrop-blur-xl">
-        <div className="h-2 w-2 shrink-0 rounded-full bg-white/85" />
-        <div className="min-w-0 flex-1">
-          <p className="truncate text-sm font-medium tracking-tight text-white">
-            {title}
-          </p>
-        </div>
-
-        <button
-          type="button"
-          onClick={scrollToTop}
-          onMouseEnter={() => setIsProgressHovered(true)}
-          onMouseLeave={() => setIsProgressHovered(false)}
-          onFocus={() => setIsProgressHovered(true)}
-          onBlur={() => setIsProgressHovered(false)}
-          className="relative flex h-11 w-11 shrink-0 items-center justify-center rounded-full transition-transform cursor-pointer duration-200 hover:scale-105 focus-visible:scale-105 focus-visible:outline-none"
-          aria-label="Scroll to top"
+      <button
+        type="button"
+        tabIndex={isVisible ? 0 : -1}
+        onClick={scrollToTop}
+        onMouseEnter={() => setIsProgressHovered(true)}
+        onMouseLeave={() => setIsProgressHovered(false)}
+        onFocus={() => setIsProgressHovered(true)}
+        onBlur={() => setIsProgressHovered(false)}
+        className="pointer-events-auto relative flex h-9 w-9 shrink-0 cursor-pointer items-center justify-center rounded-full bg-accent transition-transform duration-200 hover:scale-105 focus-visible:scale-105 focus-visible:outline-none"
+        aria-label={`Scroll to top. Reading progress ${progressLabel}`}
+      >
+        <span
+          className={cn(
+            "absolute inset-0 rounded-full transition-opacity duration-200",
+            isProgressHovered ? "opacity-80" : "opacity-100",
+          )}
+          style={{
+            backgroundImage: `conic-gradient(rgba(255, 255, 255, 0.96) ${progressDegrees}, rgba(148, 163, 184, 0.22) 0deg)`,
+          }}
+          aria-hidden="true"
+        />
+        <span
+          className="absolute inset-[3px] rounded-full bg-accent"
+          aria-hidden="true"
+        />
+        <span
+          className={cn(
+            "absolute flex items-center justify-center text-[9px] font-semibold text-white transition-opacity duration-200",
+            isProgressHovered ? "opacity-0" : "opacity-100",
+          )}
+          aria-hidden={isProgressHovered}
         >
-          <svg
-            className={`-rotate-90 transition-opacity duration-200 ${
-              isProgressHovered ? "opacity-80" : "opacity-100"
-            }`}
-            width="44"
-            height="44"
-            viewBox="0 0 44 44"
-            role="img"
-            aria-label={`Reading progress ${progressLabel}`}
-          >
-            <circle
-              cx="22"
-              cy="22"
-              r={PROGRESS_RING_RADIUS}
-              fill="none"
-              stroke="rgba(148, 163, 184, 0.22)"
-              strokeWidth="3.5"
-            />
-            <circle
-              cx="22"
-              cy="22"
-              r={PROGRESS_RING_RADIUS}
-              fill="none"
-              stroke="rgba(255, 255, 255, 0.96)"
-              strokeWidth="3.5"
-              strokeLinecap="round"
-              strokeDasharray={PROGRESS_RING_CIRCUMFERENCE}
-              strokeDashoffset={strokeDashoffset}
-            />
-          </svg>
-          <span className="absolute flex items-center justify-center text-[10px] font-semibold text-white transition-opacity duration-200">
-            <span className={isProgressHovered ? "opacity-0" : "opacity-100"}>
-              {progressValue}
-            </span>
-          </span>
-          <ArrowUp
-            className={`absolute h-4 w-4 text-white transition-all duration-200 ${
-              isProgressHovered
-                ? "translate-y-0 opacity-100"
-                : "translate-y-1 opacity-0"
-            }`}
-          />
-        </button>
-      </div>
+          {progressValue}
+        </span>
+        <ArrowUp
+          className={cn(
+            "absolute h-3.5 w-3.5 text-white transition-all duration-200",
+            isProgressHovered
+              ? "translate-y-0 opacity-100"
+              : "translate-y-1 opacity-0",
+          )}
+          aria-hidden="true"
+        />
+      </button>
     </div>
   );
 }
@@ -536,6 +517,10 @@ export function BlogDetailsClient({ slug }: { slug: string }) {
   const blog = data?.blog ?? null;
   const blogTags = parseBlogTags(blog?.tag);
   const articleContentRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    highlightCodeBlocks(articleContentRef.current);
+  }, [blog?.contentHtml]);
 
   if (isLoading) {
     return <BlogDetailsSkeleton />;
@@ -581,10 +566,7 @@ export function BlogDetailsClient({ slug }: { slug: string }) {
         dangerouslySetInnerHTML={{ __html: blog.contentHtml }}
       />
 
-      <ReadingProgressIsland
-        title={blog.title}
-        targetRef={articleContentRef}
-      />
+      <ReadingProgressIsland targetRef={articleContentRef} />
 
       <footer className="mt-12 border-t border-border pt-6">
         <p className="mb-3 text-xs font-medium uppercase tracking-normal text-muted-foreground">

@@ -26,6 +26,7 @@ import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
+import { highlightCodeBlocks } from "@/lib/syntax-highlighting";
 import { formatBlogTags, parseBlogTags } from "@/lib/utils";
 
 import { saveBlog } from "../actions";
@@ -64,6 +65,7 @@ export function BlogEditor({ initialBlog = null }: BlogEditorProps) {
   const [tagInput, setTagInput] = useState("");
   const saveTimer = useRef<number | null>(null);
   const tagInputRef = useRef<HTMLInputElement | null>(null);
+  const previewContentRef = useRef<HTMLDivElement | null>(null);
   const contentStorageKey = blogId ? `${STORAGE_KEY}:${blogId}` : STORAGE_KEY;
   const titleStorageKey = blogId ? `${TITLE_KEY}:${blogId}` : TITLE_KEY;
   const tagStorageKey = blogId ? `${TAG_KEY}:${blogId}` : TAG_KEY;
@@ -112,7 +114,7 @@ export function BlogEditor({ initialBlog = null }: BlogEditorProps) {
       TextStyle,
       Color,
       Highlight.configure({ multicolor: false }),
-      CodeBlockLowlight.configure({ lowlight }),
+      CodeBlockLowlight.configure({ lowlight, defaultLanguage: "javascript" }),
     ],
     content: initialBlog?.contentJson ?? DEFAULT_CONTENT,
     editorProps: {
@@ -135,6 +137,7 @@ export function BlogEditor({ initialBlog = null }: BlogEditorProps) {
       }, 900);
     },
   });
+  const html = editor?.getHTML() ?? "";
 
   useEffect(() => {
     if (!editor) {
@@ -202,6 +205,14 @@ export function BlogEditor({ initialBlog = null }: BlogEditorProps) {
       }
     };
   }, []);
+
+  useEffect(() => {
+    if (!preview) {
+      return;
+    }
+
+    highlightCodeBlocks(previewContentRef.current);
+  }, [html, preview]);
 
   const manualSave = () => {
     if (!editor) {
@@ -298,7 +309,6 @@ export function BlogEditor({ initialBlog = null }: BlogEditorProps) {
     toast.success("Cleared.");
   };
 
-  const html = editor?.getHTML() ?? "";
   const publishLabel = blogId ? "Update" : "Publish";
   const publishingLabel = blogId ? "Updating..." : "Publishing...";
   const statusLabel =
@@ -523,6 +533,7 @@ export function BlogEditor({ initialBlog = null }: BlogEditorProps) {
         {preview ? (
           <article className="pt-2">
             <div
+              ref={previewContentRef}
               className="blog-editor-content ProseMirror"
               dangerouslySetInnerHTML={{ __html: html }}
             />
