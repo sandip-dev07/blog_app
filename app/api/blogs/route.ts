@@ -13,11 +13,27 @@ import {
 } from "@/lib/public-blogs";
 
 const DEFAULT_PUBLIC_BLOG_LIMIT = 3;
+const MAX_PUBLIC_BLOG_LIMIT = 50;
+
+function parseBlogLimit(limitValue: string | null) {
+  if (!limitValue) {
+    return DEFAULT_PUBLIC_BLOG_LIMIT;
+  }
+
+  const parsedLimit = Number.parseInt(limitValue, 10);
+
+  if (!Number.isFinite(parsedLimit) || parsedLimit <= 0) {
+    return DEFAULT_PUBLIC_BLOG_LIMIT;
+  }
+
+  return Math.min(parsedLimit, MAX_PUBLIC_BLOG_LIMIT);
+}
 
 export async function GET(request: NextRequest) {
   const search = request.nextUrl.searchParams.get("q") ?? "";
+  const limit = parseBlogLimit(request.nextUrl.searchParams.get("limit"));
   const origin = request.nextUrl.origin;
-  const blogs = await getPublishedBlogs(search, DEFAULT_PUBLIC_BLOG_LIMIT);
+  const blogs = await getPublishedBlogs(search, limit);
   const payload = {
     blogs: blogs.map((blog) => ({
       id: blog.id,

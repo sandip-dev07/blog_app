@@ -25,10 +25,12 @@ This project uses [`next/font`](https://nextjs.org/docs/app/building-your-applic
 Published blogs are available as a read-only public API for use on external websites.
 
 - `GET /api/blogs`
+- `GET /api/blogs?limit=3`
 - `GET /api/blogs?q=react`
+- `GET /api/blogs?q=react&limit=6`
 - `GET /api/blogs/[slug]`
 
-`GET /api/blogs` returns the latest 3 published posts. These endpoints now send CORS headers, so browser-side fetches from other domains work without a proxy. If you want to restrict allowed origins, set `PUBLIC_BLOG_API_ORIGINS` as a comma-separated list, for example:
+`GET /api/blogs` returns the latest 3 published posts by default. You can override that with the `limit` query param, for example `GET /api/blogs?limit=6`. Invalid or missing limits fall back to `3`, and the maximum accepted limit is `50`. These endpoints now send CORS headers, so browser-side fetches from other domains work without a proxy. If you want to restrict allowed origins, set `PUBLIC_BLOG_API_ORIGINS` as a comma-separated list, for example:
 
 ```bash
 PUBLIC_BLOG_API_ORIGINS=https://site-one.com,https://site-two.com
