@@ -28,6 +28,7 @@ Published blogs are available as a read-only public API for use on external webs
 - `GET /api/blogs?limit=3`
 - `GET /api/blogs?q=react`
 - `GET /api/blogs?q=react&limit=6`
+- `GET /api/blogs?view=internal`
 - `GET /api/blogs/[slug]`
 
 `GET /api/blogs` returns the latest 3 published posts by default. You can override that with the `limit` query param, for example `GET /api/blogs?limit=6`. Invalid or missing limits fall back to `3`, and the maximum accepted limit is `50`. These endpoints now send CORS headers, so browser-side fetches from other domains work without a proxy. If you want to restrict allowed origins, set `PUBLIC_BLOG_API_ORIGINS` as a comma-separated list, for example:
@@ -46,7 +47,7 @@ document.querySelector("#blog-title")!.textContent = blog.title;
 document.querySelector("#blog-content")!.innerHTML = blog.contentHtml;
 ```
 
-List responses include `url` and `apiUrl` for each blog, and single-blog responses include `contentHtml` for direct rendering.
+The default public list response only includes `id`, `title`, `url`, `tag`, `excerpt`, `coverImage`, `date`, and `author.name`. The optional `view=internal` query param keeps the richer list shape used by this app itself. Public responses do not expose `author.email`.
 
 ## Learn More
 

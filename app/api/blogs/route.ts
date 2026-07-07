@@ -15,6 +15,10 @@ import {
 const DEFAULT_PUBLIC_BLOG_LIMIT = 3;
 const MAX_PUBLIC_BLOG_LIMIT = 50;
 
+function isInternalView(view: string | null) {
+  return view === "internal";
+}
+
 function parseBlogLimit(limitValue: string | null) {
   if (!limitValue) {
     return DEFAULT_PUBLIC_BLOG_LIMIT;
@@ -31,6 +35,7 @@ function parseBlogLimit(limitValue: string | null) {
 
 export async function GET(request: NextRequest) {
   const search = request.nextUrl.searchParams.get("q") ?? "";
+  const internalView = isInternalView(request.nextUrl.searchParams.get("view"));
   const limit = parseBlogLimit(request.nextUrl.searchParams.get("limit"));
   const origin = request.nextUrl.origin;
   const blogs = await getPublishedBlogs(search, limit);
@@ -38,17 +43,21 @@ export async function GET(request: NextRequest) {
     blogs: blogs.map((blog) => ({
       id: blog.id,
       title: blog.title,
-      slug: blog.slug,
       url: `${origin}/blogs/${blog.slug}`,
-      apiUrl: `${origin}/api/blogs/${blog.slug}`,
       tag: blog.tag,
       excerpt: getExcerpt(blog.contentHtml),
       coverImage: blog.coverImage,
-      publishedAt: blog.publishedAt,
-      updatedAt: blog.updatedAt,
       date: formatBlogDate(blog.publishedAt ?? blog.updatedAt),
-      readTime: estimateReadTime(blog.contentHtml),
       author: blog.author,
+      ...(internalView
+        ? {
+            slug: blog.slug,
+            apiUrl: `${origin}/api/blogs/${blog.slug}`,
+            publishedAt: blog.publishedAt,
+            updatedAt: blog.updatedAt,
+            readTime: estimateReadTime(blog.contentHtml),
+          }
+        : {}),
     })),
   };
 

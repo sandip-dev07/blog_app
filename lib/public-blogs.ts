@@ -83,7 +83,6 @@ async function getPublishedBlogsUncached(search = "", limit?: number) {
       author: {
         select: {
           name: true,
-          email: true,
         },
       },
     },
@@ -111,7 +110,6 @@ async function getPublishedBlogBySlugUncached(slug: string) {
       author: {
         select: {
           name: true,
-          email: true,
         },
       },
     },

@@ -48,8 +48,8 @@ export default function BlogList() {
   const [search] = useQueryState("search");
   const normalizedSearch = (search ?? "").trim();
   const blogsUrl = normalizedSearch
-    ? `/api/blogs?q=${encodeURIComponent(normalizedSearch)}`
-    : "/api/blogs";
+    ? `/api/blogs?view=internal&q=${encodeURIComponent(normalizedSearch)}`
+    : "/api/blogs?view=internal";
   const { data, error, isLoading } = useSWR<BlogsResponse>(blogsUrl);
   const posts = data?.blogs ?? [];
 
