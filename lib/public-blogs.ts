@@ -44,7 +44,7 @@ export function estimateReadTime(html: string) {
   return `${minutes} min read`;
 }
 
-async function getPublishedBlogsUncached(search = "") {
+async function getPublishedBlogsUncached(search = "", limit?: number) {
   const query = search.trim();
 
   return db.blog.findMany({
@@ -70,6 +70,7 @@ async function getPublishedBlogsUncached(search = "") {
         : {}),
     },
     orderBy: [{ publishedAt: "desc" }, { updatedAt: "desc" }],
+    ...(typeof limit === "number" ? { take: limit } : {}),
     select: {
       id: true,
       title: true,
@@ -117,12 +118,16 @@ async function getPublishedBlogBySlugUncached(slug: string) {
   });
 }
 
-export async function getPublishedBlogs(search = "") {
+export async function getPublishedBlogs(search = "", limit?: number) {
   const query = search.trim();
+  const normalizedLimit =
+    typeof limit === "number" && Number.isFinite(limit) && limit > 0
+      ? Math.floor(limit)
+      : undefined;
 
   return unstable_cache(
-    async () => getPublishedBlogsUncached(query),
-    ["published-blogs", query],
+    async () => getPublishedBlogsUncached(query, normalizedLimit),
+    ["published-blogs", query, String(normalizedLimit ?? "all")],
     {
       tags: [PUBLISHED_BLOGS_TAG],
       revalidate: 300,

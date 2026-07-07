@@ -20,6 +20,32 @@ You can start editing the page by modifying `app/page.tsx`. The page auto-update
 
 This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
 
+## Public Blog API
+
+Published blogs are available as a read-only public API for use on external websites.
+
+- `GET /api/blogs`
+- `GET /api/blogs?q=react`
+- `GET /api/blogs/[slug]`
+
+`GET /api/blogs` returns the latest 3 published posts. These endpoints now send CORS headers, so browser-side fetches from other domains work without a proxy. If you want to restrict allowed origins, set `PUBLIC_BLOG_API_ORIGINS` as a comma-separated list, for example:
+
+```bash
+PUBLIC_BLOG_API_ORIGINS=https://site-one.com,https://site-two.com
+```
+
+Example usage from another site:
+
+```ts
+const response = await fetch("https://your-domain.com/api/blogs/my-post-slug");
+const { blog } = await response.json();
+
+document.querySelector("#blog-title")!.textContent = blog.title;
+document.querySelector("#blog-content")!.innerHTML = blog.contentHtml;
+```
+
+List responses include `url` and `apiUrl` for each blog, and single-blog responses include `contentHtml` for direct rendering.
+
 ## Learn More
 
 To learn more about Next.js, take a look at the following resources:
@@ -33,4 +59,4 @@ You can check out [the Next.js GitHub repository](https://github.com/vercel/next
 
 The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Check out [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.

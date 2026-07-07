@@ -1,7 +1,10 @@
-import { notFound } from "next/navigation";
-import type { NextRequest } from "next/server";
+import { NextResponse, type NextRequest } from "next/server";
 
 import { jsonWithETag } from "@/lib/etag";
+import {
+  buildPublicApiOptionsResponse,
+  withPublicApiCors,
+} from "@/lib/public-api";
 import {
   estimateReadTime,
   formatBlogDate,
@@ -17,10 +20,22 @@ type BlogRouteContext = {
 
 export async function GET(request: NextRequest, context: BlogRouteContext) {
   const { slug } = await context.params;
+  const origin = request.nextUrl.origin;
   const blog = await getPublishedBlogBySlug(slug);
 
   if (!blog) {
-    notFound();
+    return withPublicApiCors(
+      request,
+      NextResponse.json(
+        {
+          error: {
+            code: "BLOG_NOT_FOUND",
+            message: "Published blog not found.",
+          },
+        },
+        { status: 404 },
+      ),
+    );
   }
 
   const payload = {
@@ -28,6 +43,8 @@ export async function GET(request: NextRequest, context: BlogRouteContext) {
       id: blog.id,
       title: blog.title,
       slug: blog.slug,
+      url: `${origin}/blogs/${blog.slug}`,
+      apiUrl: `${origin}/api/blogs/${blog.slug}`,
       tag: blog.tag,
       excerpt: getExcerpt(blog.contentHtml),
       contentHtml: blog.contentHtml,
@@ -40,8 +57,15 @@ export async function GET(request: NextRequest, context: BlogRouteContext) {
     },
   };
 
-  return jsonWithETag({
+  return withPublicApiCors(
     request,
-    payload,
-  });
+    jsonWithETag({
+      request,
+      payload,
+    }),
+  );
+}
+
+export function OPTIONS(request: NextRequest) {
+  return buildPublicApiOptionsResponse(request);
 }
