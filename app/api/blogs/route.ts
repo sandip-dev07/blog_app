@@ -19,15 +19,15 @@ function isInternalView(view: string | null) {
   return view === "internal";
 }
 
-function parseBlogLimit(limitValue: string | null) {
+function parseBlogLimit(limitValue: string | null, internalView: boolean) {
   if (!limitValue) {
-    return DEFAULT_PUBLIC_BLOG_LIMIT;
+    return internalView ? undefined : DEFAULT_PUBLIC_BLOG_LIMIT;
   }
 
   const parsedLimit = Number.parseInt(limitValue, 10);
 
   if (!Number.isFinite(parsedLimit) || parsedLimit <= 0) {
-    return DEFAULT_PUBLIC_BLOG_LIMIT;
+    return internalView ? undefined : DEFAULT_PUBLIC_BLOG_LIMIT;
   }
 
   return Math.min(parsedLimit, MAX_PUBLIC_BLOG_LIMIT);
@@ -36,7 +36,10 @@ function parseBlogLimit(limitValue: string | null) {
 export async function GET(request: NextRequest) {
   const search = request.nextUrl.searchParams.get("q") ?? "";
   const internalView = isInternalView(request.nextUrl.searchParams.get("view"));
-  const limit = parseBlogLimit(request.nextUrl.searchParams.get("limit"));
+  const limit = parseBlogLimit(
+    request.nextUrl.searchParams.get("limit"),
+    internalView,
+  );
   const origin = request.nextUrl.origin;
   const blogs = await getPublishedBlogs(search, limit);
   const payload = {
