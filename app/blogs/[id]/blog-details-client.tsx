@@ -83,7 +83,11 @@ function useReadingProgress(targetRef: React.RefObject<HTMLDivElement | null>) {
         articleBottom - viewportHeight,
         articleTop,
       );
-      const normalizedScrollTop = clamp(scrollTop, articleTop, maxScrollableTop);
+      const normalizedScrollTop = clamp(
+        scrollTop,
+        articleTop,
+        maxScrollableTop,
+      );
       const progressDenominator = Math.max(maxScrollableTop - articleTop, 1);
       const nextProgress = clamp(
         (normalizedScrollTop - articleTop) / progressDenominator,
@@ -92,7 +96,8 @@ function useReadingProgress(targetRef: React.RefObject<HTMLDivElement | null>) {
       );
       const nextIsVisible =
         nextProgress >= READING_PROGRESS_SHOW_AT &&
-        scrollTop < articleBottom - viewportHeight * READING_PROGRESS_HIDE_OFFSET;
+        scrollTop <
+          articleBottom - viewportHeight * READING_PROGRESS_HIDE_OFFSET;
 
       setReadingState((currentState) => {
         if (
@@ -164,7 +169,7 @@ const socialLinks = [
 
 function BlogDetailsShell({ children }: { children: React.ReactNode }) {
   return (
-    <main className="mx-auto min-h-screen w-full max-w-2xl bg-background px-6 py-6 text-foreground sm:px-0">
+    <main className="mx-auto min-h-screen w-full max-w-2xl bg-background px-4 py-6 text-foreground sm:px-0">
       <article className="mx-auto w-full pb-20">
         <Link
           href="/"
@@ -489,7 +494,7 @@ function ReadingProgressIsland({
         />
         <span
           className={cn(
-            "absolute flex items-center justify-center text-[9px] font-semibold text-white transition-opacity duration-200",
+            "absolute flex items-center justify-center text-[9px] font-semibold text-primary transition-opacity duration-200",
             isProgressHovered ? "opacity-0" : "opacity-100",
           )}
           aria-hidden={isProgressHovered}
@@ -498,7 +503,7 @@ function ReadingProgressIsland({
         </span>
         <ArrowUp
           className={cn(
-            "absolute h-3.5 w-3.5 text-white transition-all duration-200",
+            "absolute h-3.5 w-3.5 text-primary transition-all duration-200",
             isProgressHovered
               ? "translate-y-0 opacity-100"
               : "translate-y-1 opacity-0",
@@ -538,7 +543,7 @@ export function BlogDetailsClient({ slug }: { slug: string }) {
 
   return (
     <BlogDetailsShell>
-      <header className="border-b border-border pb-7">
+      <header className="pb-4">
         <div className="mb-3 flex flex-wrap items-center gap-2 text-[11px] text-muted-foreground">
           {blogTags.map((tag) => (
             <span
@@ -582,7 +587,7 @@ export function BlogDetailsClient({ slug }: { slug: string }) {
                 href={social.href}
                 target="_blank"
                 rel="noreferrer"
-                className="inline-flex h-9 items-center gap-2 rounded-md border border-border px-3 text-sm font-medium text-muted-foreground transition-colors hover:border-foreground/40 hover:text-foreground"
+                className="inline-flex size-10 items-center gap-2 rounded-full border border-border px-3 text-sm font-medium text-muted-foreground transition-colors hover:border-foreground/40 hover:text-foreground"
               >
                 <Icon className="h-4 w-4" />
               </a>

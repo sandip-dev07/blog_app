@@ -207,7 +207,7 @@
   }
 
   .blog-editor-content pre {
-    @apply overflow-x-auto rounded-lg border border-border bg-zinc-950 p-4 text-sm leading-6 shadow-sm;
+    @apply overflow-x-auto rounded-lg border border-zinc-200 bg-zinc-950 p-4 text-sm leading-6 shadow-sm dark:border-zinc-800 dark:bg-zinc-900;
   }
 
   .blog-editor-content pre code {
@@ -279,7 +279,7 @@
   }
 
   .blog-editor-content img {
-    @apply max-h-[680px] w-full rounded-lg object-cover;
+    @apply max-h-[680px] w-full rounded-lg border border-zinc-200 object-cover dark:border-transparent;
   }
 
   .blog-editor-content hr {

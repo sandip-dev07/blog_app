@@ -6,7 +6,7 @@ import Reveal from "@/components/reveal";
 
 export default function Home() {
   return (
-    <main className="mx-auto min-h-screen w-full max-w-2xl bg-background px-6 py-10 text-foreground sm:px-0 sm:py-14">
+    <main className="mx-auto min-h-screen w-full max-w-2xl bg-background px-4 py-10 text-foreground sm:px-0 sm:py-14">
       <section id="blog" className="space-y-10">
         <Reveal>
           <div className="flex items-start justify-between gap-6">

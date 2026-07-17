@@ -5,6 +5,8 @@ import { usePathname, useRouter } from "next/navigation";
 import { useQueryState } from "nuqs";
 
 import { Input } from "@/components/ui/input";
+import { ThemeToggle } from "@/components/toggle-theme";
+
 
 export default function Navbar() {
   const router = useRouter();
@@ -23,7 +25,7 @@ export default function Navbar() {
 
   return (
     <header className="sticky left-0 top-0 z-40 w-full border-b border-border/60 bg-background/95 backdrop-blur">
-      <nav className="mx-auto flex h-14 w-full max-w-2xl items-center justify-between px-6 sm:px-0">
+      <nav className="mx-auto flex h-14 w-full max-w-2xl items-center justify-between px-4 sm:px-0">
         <Link
           href="/"
           className="font-mono text-foreground transition-colors hover:text-primary"
@@ -31,7 +33,8 @@ export default function Navbar() {
           ~/blogg-x
         </Link>
 
-        <div className="items-center gap-5 flex">
+        <div className="items-center gap-3 flex">
+          <ThemeToggle/>
           <form
             key={`${pathname}:${search ?? ""}`}
             onSubmit={(event) => {

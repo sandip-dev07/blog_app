@@ -5,6 +5,7 @@ import { Suspense } from "react";
 import "./globals.css";
 import Navbar from "./navbar";
 import Provider from "./provider";
+import { ThemeProvider } from "@/components/theme-provider";
 
 const hankenGrotesk = Hanken_Grotesk({
   subsets: ["latin"],
@@ -22,7 +23,7 @@ const hankenGrotesk = Hanken_Grotesk({
 });
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
-const siteName = "~/sandip";
+const siteName = "~/bloggx";
 const siteDescription =
   "Practical insights on backend design, system architecture, frontend engineering, AI, and building reliable software.";
 
@@ -81,13 +82,18 @@ export default function RootLayout({
       suppressHydrationWarning
       className={`${hankenGrotesk.variable} h-full dark antialiased`}
     >
-      <body className={`${hankenGrotesk.variable} min-h-full flex flex-col`} suppressHydrationWarning>
-        <Provider>
-          <Suspense fallback={null}>
-            <Navbar />
-          </Suspense>
-          {children}
-        </Provider>
+      <body
+        className={`${hankenGrotesk.variable} min-h-full flex flex-col`}
+        suppressHydrationWarning
+      >
+        <ThemeProvider attribute="class" defaultTheme="dark" enableSystem>
+          <Provider>
+            <Suspense fallback={null}>
+              <Navbar />
+            </Suspense>
+            {children}
+          </Provider>
+        </ThemeProvider>
       </body>
     </html>
   );
